@@ -1,0 +1,20 @@
+id: t001-hello
+name: Hello Report
+description: Compute a total from CSV input and write it to report.txt.
+version: "1"
+instruction: >-
+  The file input/quantities.csv has columns item,quantity. Read every row and compute
+  the sum of all integer quantities. Write ONLY that number to output/report.txt
+  (a single trailing newline is fine).
+files:
+  - src: files/quantities.csv
+    dest: quantities.csv
+grader:
+  type: file-match
+  path: output/report.txt
+  expect: "142"
+  mode: exact
+limits:
+  cpus: 1.0
+  memory_mb: 256
+  timeout_s: 120

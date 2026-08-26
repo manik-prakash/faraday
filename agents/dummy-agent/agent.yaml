@@ -1,0 +1,5 @@
+id: dummy-agent
+name: Dummy Reference Agent
+version: 0.1.0
+build: .
+tag: bench/dummy-agent:0.1.0
