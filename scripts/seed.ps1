@@ -1,5 +1,6 @@
-# Submit a baseline set of runs so a fresh leaderboard is populated.
-# Requires: `bench serve` + `bench worker` running.
+# Populate a fresh leaderboard by submitting a baseline set of runs.
+# Requires the API (bench serve / compose `api`) + a `bench worker` running.
+# Talks to the HTTP API directly - no need for `bench` on PATH.
 param(
     [string]$Api = "http://127.0.0.1:8000"
 )
@@ -7,17 +8,20 @@ param(
 $ErrorActionPreference = "Stop"
 $root = Split-Path -Parent $PSScriptRoot
 
-function Submit-All($agent, $evals) {
+function Submit-All($agentDir, $evals) {
+    $agent = Join-Path $root "agents/$agentDir"
     foreach ($e in $evals) {
-        Get-ChildItem -Directory "$root/evals/$e/tasks" | ForEach-Object {
-            bench submit --task $_.FullName --agent "$root/agents/$agent" --api $Api
+        Get-ChildItem -Directory (Join-Path $root "evals/$e/tasks") | ForEach-Object {
+            $body = @{ task = $_.FullName; agent = $agent } | ConvertTo-Json -Compress
+            Invoke-RestMethod -Method Post -Uri "$Api/api/runs" -ContentType "application/json" -Body $body | Out-Null
         }
+        Write-Host "queued $agentDir x $e"
     }
 }
 
 # scripted-agent: real solver for shell-mini + datawrangle-mini, canned gaia-mini
 Submit-All "scripted-agent" @("shell-mini", "gaia-mini", "datawrangle-mini")
-# dummy-agent: only ever solves t001 — shows an honest low baseline
+# dummy-agent: only ever solves t001 - an honest low baseline
 Submit-All "dummy-agent" @("shell-mini")
 
-Write-Host "seeded — open $Api/#/"
+Write-Host "seeded - open $Api/#/"

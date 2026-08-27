@@ -19,7 +19,26 @@ Open http://localhost:8000. Seed a populated leaderboard:
 worker native side-steps that. The API, which only needs Postgres + Redis, runs
 fine in `docker compose`.
 
-## Share it (no hosting)
+## Always-on (single small box)
+
+Everything on one Linux VM (a $5–10 VPS, or a free tier). The worker runs on the
+host, the rest in compose:
+
+```bash
+git clone <repo> && cd bench
+docker compose up -d --build            # postgres + redis + api on :8000
+pip install -e .
+BENCH_CORS_ORIGINS="https://your.domain" nohup bench worker &
+# put nginx / caddy in front of :8000 for TLS, or use `flyctl` / a PaaS
+```
+
+For a PaaS (Fly.io etc.): deploy the root `Dockerfile` as the web service, add
+managed Postgres + Redis, set `BENCH_DATABASE_URL` / `BENCH_REDIS_URL` /
+`BENCH_API_HOST=0.0.0.0` / `BENCH_CORS_ORIGINS`, and run one more machine with
+`command = ["bench", "worker"]` that has the Docker socket (or a dedicated
+runner host). Keep `BENCH_ALLOW_UPLOADED_SCRIPT_GRADERS` unset on anything public.
+
+## Share it quickly (no hosting)
 
 Expose the local API through a tunnel:
 

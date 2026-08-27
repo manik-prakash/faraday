@@ -6,10 +6,24 @@ trajectories on a live leaderboard.
 
 ## Status
 
-Phases 0–3 working: local run loop, Redis queue, worker pool, Postgres persistence,
-FastAPI server, web leaderboard + trajectory viewer, three ported/original eval sets
-(40 tasks), per-run token/cost tracking, bring-your-own API keys, and bring-your-own
-eval upload. ~110 unit tests + a Docker-marked end-to-end suite.
+All roadmap phases working: local run loop, Redis queue, worker pool, Postgres,
+FastAPI + web leaderboard + trajectory viewer, three ported/original eval sets
+(40 tasks), per-run token/cost tracking, bring-your-own API keys, bring-your-own
+eval upload (CLI + web), a hardened container sandbox (non-root, cap-drop,
+read-only rootfs), and three reference agents including a real BYO-key LLM agent.
+~130 unit tests + a Docker-marked end-to-end suite (incl. the full outsider path).
+
+Latest local run: `scripted-agent` 40/40 tasks at score 1.0 across the three eval
+sets; `dummy-agent` 1/15 (honest baseline).
+
+<!-- TODO screenshot: save docs/img/leaderboard.png (leaderboard + Evals panel) and
+     docs/img/trajectory.png (run detail: trajectory viewer + token/cost chips), then
+     uncomment the line below. Demo GIF shot list: submit -> queue -> container -> score
+     -> step through trajectory -> point at cost; narrate the worker-on-host and
+     CRLF-grader failures that were hit and fixed.
+![leaderboard](docs/img/leaderboard.png)
+-->
+
 
 ## Architecture
 
