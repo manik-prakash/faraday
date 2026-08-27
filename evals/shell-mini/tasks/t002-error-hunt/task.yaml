@@ -1,0 +1,20 @@
+id: t002-error-hunt
+name: Error Hunt
+description: Count matching log lines in a text file.
+version: "1"
+instruction: >-
+  The file input/app_events.txt contains one event per line, each beginning with a
+  level word. Count how many lines whose level (the first whitespace-separated token)
+  is exactly ERROR. Write ONLY that count to output/report.txt.
+files:
+  - src: files/app_events.txt
+    dest: app_events.txt
+grader:
+  type: file-match
+  path: output/report.txt
+  expect: "4"
+  mode: exact
+limits:
+  cpus: 1.0
+  memory_mb: 256
+  timeout_s: 120

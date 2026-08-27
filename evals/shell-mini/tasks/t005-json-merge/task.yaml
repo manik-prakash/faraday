@@ -1,0 +1,22 @@
+id: t005-json-merge
+name: JSON Merge
+description: Deep-merge two JSON config files.
+version: "1"
+instruction: >-
+  Read input/a.json and input/b.json and write output/merged.json containing the merge
+  of both objects, where keys from b.json override keys from a.json at every nesting
+  level.
+files:
+  - src: files/a.json
+    dest: a.json
+  - src: files/b.json
+    dest: b.json
+grader:
+  type: json-field
+  path: output/merged.json
+  field: services.cache.ttl_seconds
+  expect: 600
+limits:
+  cpus: 1.0
+  memory_mb: 256
+  timeout_s: 120

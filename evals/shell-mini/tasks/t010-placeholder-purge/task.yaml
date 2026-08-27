@@ -1,0 +1,22 @@
+id: t010-placeholder-purge
+name: Placeholder Purge
+description: Replace template placeholders across multiple files.
+version: "1"
+instruction: >-
+  The input/pages/ directory has three .html files containing the placeholder {{NAME}}.
+  Copy all three files into output/site/ (same filenames) with every occurrence of
+  {{NAME}} replaced by Benchworm.
+files:
+  - src: files/index.html
+    dest: pages/index.html
+  - src: files/about.html
+    dest: pages/about.html
+  - src: files/contact.html
+    dest: pages/contact.html
+grader:
+  type: script-exit
+  script: grader.sh
+limits:
+  cpus: 1.0
+  memory_mb: 256
+  timeout_s: 120

@@ -1,0 +1,20 @@
+id: t013-ini-to-json
+name: INI to JSON
+description: Convert an INI config file to nested JSON.
+version: "1"
+instruction: >-
+  The file input/settings.ini uses INI syntax with [sections] and key=value pairs.
+  Convert it to output/settings.json where each section becomes a top-level object of
+  its key/value pairs. Values that look like integers must become JSON numbers.
+files:
+  - src: files/settings.ini
+    dest: settings.ini
+grader:
+  type: json-field
+  path: output/settings.json
+  field: server.workers
+  expect: 4
+limits:
+  cpus: 1.0
+  memory_mb: 256
+  timeout_s: 120

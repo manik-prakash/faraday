@@ -1,0 +1,12 @@
+id: g011-square-17
+name: Square of 17
+description: Compute 17 squared.
+version: "1"
+instruction: >-
+  What is 17 squared? Write only the number to output/answer.txt.
+grader:
+  type: file-match
+  path: output/answer.txt
+  expect: "289"
+  mode: exact
+limits: { cpus: 1.0, memory_mb: 256, timeout_s: 120 }

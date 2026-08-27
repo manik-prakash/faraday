@@ -1,0 +1,15 @@
+id: d010-csv-to-json
+name: CSV to JSON Map
+description: Turn a two-column CSV into a JSON object.
+version: "1"
+instruction: >-
+  input/table.csv has columns key,value. Write output/table.json - a JSON object mapping each key to its value as a string.
+files:
+  - src: files/table.csv
+    dest: table.csv
+grader:
+  type: json-field
+  path: output/table.json
+  field: port
+  expect: "8080"
+limits: { cpus: 1.0, memory_mb: 256, timeout_s: 120 }

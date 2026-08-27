@@ -1,0 +1,13 @@
+id: g001-periodic-count
+name: Periodic Table Count
+description: How many elements are in the periodic table.
+version: "1"
+instruction: >-
+  How many chemical elements are currently in the periodic table? Write only the number
+  to output/answer.txt.
+grader:
+  type: file-match
+  path: output/answer.txt
+  expect: "118"
+  mode: exact
+limits: { cpus: 1.0, memory_mb: 256, timeout_s: 120 }

@@ -2,8 +2,9 @@ from __future__ import annotations
 
 import json
 import uuid
-from dataclasses import asdict, dataclass, field as dataclasses_field
-from datetime import datetime, timezone
+from dataclasses import asdict, dataclass
+from dataclasses import field as dataclasses_field
+from datetime import UTC, datetime
 from pathlib import Path
 
 
@@ -20,6 +21,7 @@ class RunResult:
     started_at: str
     finished_at: str
     meta: dict = dataclasses_field(default_factory=dict)
+    usage: dict | None = None
 
     def save(self, run_dir: Path) -> Path:
         path = run_dir / "result.json"
@@ -28,11 +30,11 @@ class RunResult:
 
 
 def utcnow_iso() -> str:
-    return datetime.now(timezone.utc).isoformat()
+    return datetime.now(UTC).isoformat()
 
 
 def make_run_id() -> str:
-    stamp = datetime.now(timezone.utc).strftime("%Y%m%d-%H%M%S")
+    stamp = datetime.now(UTC).strftime("%Y%m%d-%H%M%S")
     return f"{stamp}-{uuid.uuid4().hex[:6]}"
 
 
@@ -43,7 +45,7 @@ class RunLayout:
         self.output_dir = self.run_dir / "output"
         self.logs_dir = self.run_dir / "logs"
 
-    def create(self) -> "RunLayout":
+    def create(self) -> RunLayout:
         for d in (self.run_dir, self.output_dir, self.logs_dir):
             d.mkdir(parents=True, exist_ok=True)
         return self

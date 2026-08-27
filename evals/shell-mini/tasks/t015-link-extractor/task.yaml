@@ -1,0 +1,18 @@
+id: t015-link-extractor
+name: Link Extractor
+description: Extract URLs from markdown in document order.
+version: "1"
+instruction: >-
+  The file input/readme.md contains several markdown links of the form [text](url).
+  Write every URL (just the URL, one per line, in order of appearance) to
+  output/links.txt.
+files:
+  - src: files/readme.md
+    dest: readme.md
+grader:
+  type: script-exit
+  script: grader.sh
+limits:
+  cpus: 1.0
+  memory_mb: 256
+  timeout_s: 120

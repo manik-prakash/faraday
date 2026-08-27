@@ -1,0 +1,22 @@
+id: d007-reshape-long
+name: Wide to Long
+description: Unpivot month columns into rows.
+version: "1"
+instruction: >-
+  input/wide.csv has columns name,jan,feb,mar. Write output/long.csv with header name,month,value - one row per (name, month) pair, iterating the month columns in order (jan, feb, mar) within each input row.
+files:
+  - src: files/wide.csv
+    dest: wide.csv
+grader:
+  type: file-match
+  path: output/long.csv
+  expect: |-
+    name,month,value
+    Ann,jan,1
+    Ann,feb,2
+    Ann,mar,3
+    Bob,jan,4
+    Bob,feb,5
+    Bob,mar,6
+  mode: exact
+limits: { cpus: 1.0, memory_mb: 256, timeout_s: 120 }

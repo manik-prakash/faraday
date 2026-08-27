@@ -1,0 +1,13 @@
+id: g004-titanic-year
+name: Titanic Sinking Year
+description: Year the Titanic sank.
+version: "1"
+instruction: >-
+  In which year did the RMS Titanic sink? Write only the four-digit year to
+  output/answer.txt.
+grader:
+  type: file-match
+  path: output/answer.txt
+  expect: "1912"
+  mode: exact
+limits: { cpus: 1.0, memory_mb: 256, timeout_s: 120 }

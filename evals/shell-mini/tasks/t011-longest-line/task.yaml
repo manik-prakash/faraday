@@ -1,0 +1,20 @@
+id: t011-longest-line
+name: Longest Line
+description: Find the longest line in a text file.
+version: "1"
+instruction: >-
+  The file input/passage.txt contains several lines of text. Write the LONGEST line
+  (by character count, leading/trailing whitespace trimmed) to output/longest.txt.
+  If two lines tie, use the one that appears first.
+files:
+  - src: files/passage.txt
+    dest: passage.txt
+grader:
+  type: file-match
+  path: output/longest.txt
+  expect: "The quick brown fox jumps over the lazy dog while the sheep graze quietly nearby"
+  mode: exact
+limits:
+  cpus: 1.0
+  memory_mb: 256
+  timeout_s: 120

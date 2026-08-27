@@ -1,0 +1,13 @@
+id: g010-river-egypt
+name: River of Egypt
+description: The river flowing through Egypt.
+version: "1"
+instruction: >-
+  Which river flows through Egypt? Write only its name to output/answer.txt.
+grader:
+  type: file-match
+  path: output/answer.txt
+  expect: "Nile"
+  mode: exact
+  ignore_case: true
+limits: { cpus: 1.0, memory_mb: 256, timeout_s: 120 }

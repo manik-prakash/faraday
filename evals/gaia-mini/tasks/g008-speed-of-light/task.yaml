@@ -1,0 +1,14 @@
+id: g008-speed-of-light
+name: Speed of Light
+description: Speed of light in m/s as an integer.
+version: "1"
+instruction: >-
+  What is the speed of light in vacuum, expressed in meters per second as an integer,
+  to the nearest meter (c = 299792458 m/s)? Write only that integer to
+  output/answer.txt.
+grader:
+  type: file-match
+  path: output/answer.txt
+  expect: "299792458"
+  mode: exact
+limits: { cpus: 1.0, memory_mb: 256, timeout_s: 120 }

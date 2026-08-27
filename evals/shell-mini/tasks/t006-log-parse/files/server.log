@@ -1,0 +1,10 @@
+INFO 2026-01-05T09:00:01Z web listening on :8080
+ERROR 2026-01-05T09:00:07Z db connection refused
+WARN 2026-01-05T09:00:09Z cache cold start
+ERROR 2026-01-05T09:01:22Z api upstream timeout after 30s
+INFO 2026-01-05T09:02:00Z healthcheck ok
+ERROR 2026-01-05T09:03:45Z worker crashed with code 137
+DEBUG 2026-01-05T09:04:10Z queue depth 0
+error 2026-01-05T09:04:59Z lowercase must be ignored
+ERROR 2026-01-05T09:06:31Z s3 upload failed retrying
+INFO 2026-01-05T09:07:00Z deploy finished

@@ -1,0 +1,19 @@
+id: t003-dedupe
+name: Dedupe List
+description: Remove duplicate lines keeping first occurrence order.
+version: "1"
+instruction: >-
+  The file input/names.txt has one name per line, with duplicates. Produce
+  output/unique.txt containing the same names with duplicates removed, keeping the
+  FIRST occurrence of each name and preserving original order. No trailing blank line
+  beyond a final newline.
+files:
+  - src: files/names.txt
+    dest: names.txt
+grader:
+  type: script-exit
+  script: grader.sh
+limits:
+  cpus: 1.0
+  memory_mb: 256
+  timeout_s: 120

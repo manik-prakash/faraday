@@ -1,0 +1,14 @@
+id: g013-moon-walker
+name: First Moonwalker
+description: Surname of the first person on the Moon.
+version: "1"
+instruction: >-
+  What was the surname of the first human to walk on the Moon? Write only the surname
+  to output/answer.txt.
+grader:
+  type: file-match
+  path: output/answer.txt
+  expect: "Armstrong"
+  mode: exact
+  ignore_case: true
+limits: { cpus: 1.0, memory_mb: 256, timeout_s: 120 }

@@ -1,0 +1,7 @@
+{
+  "services": {
+    "api": { "port": 8080, "retries": 3 },
+    "cache": { "ttl_seconds": 300, "max_items": 1000 }
+  },
+  "debug": false
+}

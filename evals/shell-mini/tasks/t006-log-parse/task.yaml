@@ -1,0 +1,19 @@
+id: t006-log-parse
+name: Log Parse
+description: Extract and count ERROR entries from an app log.
+version: "1"
+instruction: >-
+  The file input/server.log contains log lines of the form
+  "LEVEL timestamp component message". Write output/errors.txt containing ONLY the
+  lines whose level is exactly ERROR (keep each full original line, same order), then
+  nothing else.
+files:
+  - src: files/server.log
+    dest: server.log
+grader:
+  type: script-exit
+  script: grader.sh
+limits:
+  cpus: 1.0
+  memory_mb: 256
+  timeout_s: 120

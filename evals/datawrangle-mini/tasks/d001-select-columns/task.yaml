@@ -1,0 +1,19 @@
+id: d001-select-columns
+name: Select Columns
+description: Keep only two columns from a CSV.
+version: "1"
+instruction: >-
+  The file input/people.csv has columns name,age,city,email. Write output/trimmed.csv containing ONLY the name and city columns (in that order), keeping the header and every data row in the original order.
+files:
+  - src: files/people.csv
+    dest: people.csv
+grader:
+  type: file-match
+  path: output/trimmed.csv
+  expect: |-
+    name,city
+    Ada,London
+    Grace,NYC
+    Alan,Manchester
+  mode: exact
+limits: { cpus: 1.0, memory_mb: 256, timeout_s: 120 }
