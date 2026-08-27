@@ -9,6 +9,10 @@ export interface RunSummary {
   detail: string;
   error: string | null;
   meta: Record<string, unknown>;
+  model: string | null;
+  input_tokens: number | null;
+  output_tokens: number | null;
+  cost_usd: number | null;
   queued_at: string | null;
   started_at: string | null;
   finished_at: string | null;
@@ -38,6 +42,7 @@ export interface LeaderRow {
   runs: number;
   passes: number;
   avg_duration_s: number | null;
+  avg_cost_usd: number | null;
   last_run: string | null;
 }
 

@@ -6,8 +6,10 @@ trajectories on a live leaderboard.
 
 ## Status
 
-Phase 0 + 1 working: local run loop, Redis queue, worker pool, Postgres persistence,
-FastAPI server, web leaderboard + trajectory viewer.
+Phases 0–3 working: local run loop, Redis queue, worker pool, Postgres persistence,
+FastAPI server, web leaderboard + trajectory viewer, three ported/original eval sets
+(40 tasks), per-run token/cost tracking, bring-your-own API keys, and bring-your-own
+eval upload. ~110 unit tests + a Docker-marked end-to-end suite.
 
 ## Architecture
 
@@ -27,22 +29,27 @@ Requires Docker Desktop running.
 
 ```powershell
 python -m venv .venv
-.venv\Scripts\pip install -e .
+.venv\Scripts\pip install -e ".[dev]"
 
-docker compose up -d          # postgres (:15432) + redis (:6379)
-bench db-init
+docker compose up -d --build   # postgres (:15432) + redis (:6379) + api/UI (:8000)
+bench db-init                   # add --reset after a schema change
 
-# terminal 1
-bench serve                   # API on http://127.0.0.1:8000 (serves web/dist when built)
+bench worker                    # terminal 2 — consumes the queue (runs on the host)
 
-# terminal 2
-bench worker                  # consumes the run queue
-
-# submit a run
-bench submit --task evals/shell-mini/tasks/t001-hello --agent agents/dummy-agent
+# submit runs; scripted-agent actually solves shell-mini + datawrangle-mini
+bench submit --task evals/datawrangle-mini/tasks/d006-join --agent agents/scripted-agent
+./scripts/seed.ps1              # or: populate the whole leaderboard at once
 ```
 
 Local-only mode (no infra needed): `bench run local --task ... --agent ...`
+
+Bring your own model keys: `--env OPENAI_API_KEY=sk-...` / `--env-file .env` on
+`bench submit` and `bench run local` (see `docs/agent-contract.md`). Bring your own
+eval: `bench eval add ./my-eval --name my-eval` (see `docs/byo-eval.md`).
+Sharing & config: `docs/deploy.md`.
+
+Run the tests: `pytest -m "not docker"` (add a daemon and drop the filter for the
+end-to-end suite).
 
 ## Web UI
 
@@ -75,18 +82,20 @@ Artifacts land in `runs/<run-id>/`: `result.json`, `task.yaml`, `logs/agent.log`
 |---|---|---|
 | 0 | Local run loop: task spec + agent container + grader | ✅ |
 | 1 | Queue + workers, Postgres, API, leaderboard UI + trajectory viewer | ✅ |
-| 2 | Ported benchmarks: shell-mini (~15 tasks), gaia-mini (~15 tasks), cost tracking | ⬜ |
-| 3 | Original benchmark: DataWrangle-Bench | ⬜ |
-| 4 | Deploy (VPS/tunnel), polish README/demo | ⬜ |
+| 2 | Ported benchmarks: shell-mini (15), gaia-mini (15); `json-field` + `script-exit` graders; token/cost tracking | ✅ |
+| 3 | Original benchmark: DataWrangle-Bench (10); BYO API keys; BYO-eval upload | ✅ |
+| 4 | One-command stack, tunnel sharing, test suite + CI, README/demo | ✅ |
 
 ## API surface
 
 | Method | Path | Purpose |
 |---|---|---|
 | GET | `/healthz` | liveness |
-| POST | `/api/runs` | submit `{task, agent}` (dirs) → queued run |
+| POST | `/api/runs` | submit `{task, agent, env?}` (dirs; `env` = BYO keys) → queued run |
 | GET | `/api/runs?limit=` | recent runs |
 | GET | `/api/runs/{id}` | full detail incl. trajectory |
 | GET | `/api/runs/{id}/logs` | raw agent log |
-| GET | `/api/leaderboard?task=` | aggregated best scores |
+| GET | `/api/leaderboard?task=` | aggregated best scores + avg cost |
 | GET | `/api/tasks`, `/api/agents` | registries |
+| GET | `/api/evals` | eval names + task counts |
+| POST | `/api/evals?name=` | install a BYO-eval zip (raw body) |

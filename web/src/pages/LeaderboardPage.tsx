@@ -95,6 +95,7 @@ export function LeaderboardPage() {
                       <th className="px-4 py-2 font-medium">runs</th>
                       <th className="px-4 py-2 font-medium">passes</th>
                       <th className="px-4 py-2 font-medium">avg duration</th>
+                      <th className="px-4 py-2 font-medium">avg cost</th>
                       <th className="px-4 py-2 font-medium">last run</th>
                     </tr>
                   </thead>
@@ -120,6 +121,11 @@ export function LeaderboardPage() {
                           <td className="px-4 py-2.5 text-zinc-400">
                             {row.avg_duration_s != null
                               ? `${row.avg_duration_s.toFixed(2)}s`
+                              : "—"}
+                          </td>
+                          <td className="px-4 py-2.5 font-mono text-xs text-zinc-400">
+                            {row.avg_cost_usd != null
+                              ? `$${row.avg_cost_usd.toFixed(4)}`
                               : "—"}
                           </td>
                           <td className="px-4 py-2.5 text-xs text-zinc-500">

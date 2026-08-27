@@ -29,6 +29,25 @@ services:
       timeout: 3s
       retries: 10
 
+  # API + web UI. `docker compose up` gives you http://localhost:8000 with the
+  # leaderboard served. Run the worker on the HOST (`bench worker`) — it launches
+  # sibling Docker containers and needs host paths the daemon can see.
+  api:
+    build: .
+    container_name: bench-api
+    environment:
+      BENCH_DATABASE_URL: postgresql+psycopg://bench:bench@postgres:5432/bench
+      BENCH_REDIS_URL: redis://redis:6379/0
+      BENCH_API_HOST: 0.0.0.0
+      BENCH_CORS_ORIGINS: "*"
+    ports:
+      - "8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
 volumes:
   pgdata:
   redisdata:
