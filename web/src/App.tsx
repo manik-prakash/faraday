@@ -25,7 +25,7 @@ export default function App() {
         <div className="mx-auto flex max-w-5xl items-center justify-between px-6 py-3.5">
           <a href="#/" className="flex items-baseline gap-2">
             <span className="text-lg font-bold tracking-tight text-zinc-50">
-              bench
+              Faraday
             </span>
             <span className="hidden text-xs text-zinc-500 sm:inline">
               bring-your-own-agent benchmarks

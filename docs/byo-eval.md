@@ -22,9 +22,9 @@ my-eval/
 **CLI** (local, no server needed):
 
 ```powershell
-bench eval add ./my-eval --name my-eval        # a directory containing tasks/
-bench eval add ./my-eval.zip --name my-eval    # or a .zip of the same
-bench eval list                                # sync + show every registered eval
+faraday eval add ./my-eval --name my-eval        # a directory containing tasks/
+faraday eval add ./my-eval.zip --name my-eval    # or a .zip of the same
+faraday eval list                                # sync + show every registered eval
 ```
 
 **API**:
@@ -41,15 +41,15 @@ at 5 MB / 500 entries and path-traversal entries are refused.
 
 **Shell graders in uploads:** `script-exit` graders run arbitrary bash in the
 (network-`none`) task-env container. The API and remote installs **reject** them
-unless `BENCH_ALLOW_UPLOADED_SCRIPT_GRADERS=1`. `bench eval add` trusts local zips;
+unless `FARADAY_ALLOW_UPLOADED_SCRIPT_GRADERS=1`. `faraday eval add` trusts local zips;
 pass `--no-shell-graders` to opt out.
 
-Try it: `bench eval add ./examples/sample-eval --name sample` (two file-match tasks).
+Try it: `faraday eval add ./examples/sample-eval --name sample` (two file-match tasks).
 
 ## Run against it
 
 ```powershell
-bench submit --task evals/my-eval/tasks/m001-thing --agent agents/my-agent
+faraday submit --task evals/my-eval/tasks/m001-thing --agent agents/my-agent
 ```
 
 The leaderboard groups results by eval name.

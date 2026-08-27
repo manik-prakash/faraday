@@ -7,11 +7,11 @@ from rich.console import Console
 from rich.panel import Panel
 from rich.table import Table
 
-from bench.env_policy import sanitize_agent_env
-from bench.exceptions import BenchError
-from bench.orchestrator import LocalRunner
+from faraday.env_policy import sanitize_agent_env
+from faraday.exceptions import FaradayError
+from faraday.orchestrator import LocalRunner
 
-app = typer.Typer(name="bench", no_args_is_help=True, add_completion=False)
+app = typer.Typer(name="faraday", no_args_is_help=True, add_completion=False)
 run_app = typer.Typer(no_args_is_help=True)
 eval_app = typer.Typer(no_args_is_help=True)
 app.add_typer(run_app, name="run")
@@ -43,18 +43,18 @@ def run_local(
     project_root = _find_project_root()
     try:
         agent_env = _collect_env(env, env_file)
-    except (ValueError, BenchError) as e:
+    except (ValueError, FaradayError) as e:
         console.print(f"[red]{e}[/red]")
         raise typer.Exit(code=2) from None
     try:
         runner = LocalRunner(project_root)
-    except BenchError as e:
+    except FaradayError as e:
         console.print(f"[red]{e}[/red]")
         raise typer.Exit(code=2) from None
     with console.status("[bold blue]running…[/bold blue]"):
         try:
             result, run_dir = runner.run(task, agent, env=agent_env or None)
-        except BenchError as e:
+        except FaradayError as e:
             console.print(f"[red]run failed: {e}[/red]")
             raise typer.Exit(code=2) from None
     _print_result(result, run_dir)
@@ -87,7 +87,7 @@ def _collect_env(pairs: list[str], env_file: Path | None) -> dict[str, str]:
 def _find_project_root() -> Path:
     cwd = Path.cwd()
     for candidate in (cwd, *cwd.parents):
-        if (candidate / "bench").is_dir() and (candidate / "pyproject.toml").is_file():
+        if (candidate / "faraday").is_dir() and (candidate / "pyproject.toml").is_file():
             return candidate
     return cwd
 
@@ -103,7 +103,7 @@ def _print_result(result, run_dir: Path) -> None:
     table.add_row("duration", f"{result.duration_s:.1f}s")
     table.add_row("detail", result.detail)
     table.add_row("artifacts", str(run_dir))
-    console.print(Panel(table, title="bench run", expand=False))
+    console.print(Panel(table, title="faraday run", expand=False))
 
 
 @app.command("runs")
@@ -143,11 +143,11 @@ def db_init(
     reset: bool = typer.Option(False, "--reset", help="Drop all tables first"),
 ) -> None:
     """Create database tables."""
-    from bench.store.db import init_db
+    from faraday.store.db import init_db
 
     try:
         if reset:
-            from bench.store.db import Base, get_engine
+            from faraday.store.db import Base, get_engine
 
             Base.metadata.drop_all(get_engine())
             console.print("[yellow]dropped existing tables[/yellow]")
@@ -161,9 +161,9 @@ def db_init(
 @eval_app.command("list")
 def eval_list() -> None:
     """Sync every task under evals/ into the registry and list the evals."""
-    from bench.config import EVALS_DIR
-    from bench.evals_io import iter_task_dirs, sync_task_registry
-    from bench.store.db import get_sessionmaker
+    from faraday.config import EVALS_DIR
+    from faraday.evals_io import iter_task_dirs, sync_task_registry
+    from faraday.store.db import get_sessionmaker
 
     try:
         SessionLocal = get_sessionmaker()
@@ -194,9 +194,9 @@ def eval_add(
     ),
 ) -> None:
     """Install a bring-your-own-eval into evals/<name>/ and register its tasks."""
-    from bench.config import EVALS_DIR
-    from bench.evals_io import install_eval_archive, pack_eval_dir, sync_task_registry
-    from bench.store.db import get_sessionmaker
+    from faraday.config import EVALS_DIR
+    from faraday.evals_io import install_eval_archive, pack_eval_dir, sync_task_registry
+    from faraday.store.db import get_sessionmaker
 
     path = path.expanduser()
     data = pack_eval_dir(path) if path.is_dir() else path.read_bytes()
@@ -204,7 +204,7 @@ def eval_add(
         ids = install_eval_archive(
             data, name, EVALS_DIR, allow_script_graders=not no_shell_graders
         )
-    except BenchError as e:
+    except FaradayError as e:
         console.print(f"[red]{e}[/red]")
         raise typer.Exit(code=2) from None
     try:
@@ -229,15 +229,15 @@ def serve(
     """Start the API server (serves web/dist when built)."""
     import uvicorn
 
-    from bench.config import API_HOST
+    from faraday.config import API_HOST
 
-    uvicorn.run("bench.api.main:app", host=API_HOST, port=port)
+    uvicorn.run("faraday.api.main:app", host=API_HOST, port=port)
 
 
 @app.command("worker")
 def worker() -> None:
     """Start a worker that consumes the run queue."""
-    from bench.orchestrator.worker import main as worker_main
+    from faraday.orchestrator.worker import main as worker_main
 
     worker_main()
 
@@ -259,7 +259,7 @@ def submit(
 
     try:
         agent_env = _collect_env(env, env_file)
-    except (ValueError, BenchError) as e:
+    except (ValueError, FaradayError) as e:
         console.print(f"[red]{e}[/red]")
         raise typer.Exit(code=2) from None
 

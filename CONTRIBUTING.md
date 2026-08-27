@@ -7,7 +7,7 @@ inputs in `files/`; for state checks add a `grader.sh` and use the `script-exit`
 grader. Validate:
 
 ```powershell
-python -c "from bench.spec import load_task; load_task('evals/<eval>/tasks/<id>')"
+python -c "from faraday.spec import load_task; load_task('evals/<eval>/tasks/<id>')"
 ```
 
 ## Add an agent
@@ -21,7 +21,7 @@ Any Docker image following `docs/agent-contract.md`: read `/task/task.json`, wri
 
 ```powershell
 pip install -e ".[dev]"
-ruff check bench/ tests/ agents/
+ruff check faraday/ tests/ agents/
 pytest -m "not docker"          # add a Docker daemon + drop the filter for E2E
 ```
 

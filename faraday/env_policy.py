@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import re
 
-from bench.exceptions import BenchError
+from faraday.exceptions import FaradayError
 
 _NAME = re.compile(r"^[A-Z][A-Z0-9_]*$")
 _ALLOWED_PREFIXES = (
@@ -23,11 +23,11 @@ _ALLOWED_PREFIXES = (
     "TOGETHER_",
     "OPENROUTER_",
     "DEEPSEEK_",
-    "BENCH_",
+    "FARADAY_",
 )
 
 
-class EnvPolicyError(BenchError):
+class EnvPolicyError(FaradayError):
     """Raised when a submitted env var is not on the allowlist."""
 
 

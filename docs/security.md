@@ -1,6 +1,6 @@
 # Security & threat model
 
-`bench` runs **untrusted code** from two sources: agent images (submitters) and
+`faraday` runs **untrusted code** from two sources: agent images (submitters) and
 uploaded evals (their `grader.sh`). This is what's done about it.
 
 ## Agent container
@@ -31,9 +31,9 @@ Runs the eval's `grader.sh`. `network_mode: none`, `cap_drop: ["ALL"]`,
 
 ## Uploaded evals
 
-`POST /api/evals` (and `bench eval add` from a remote) validate every `task.yaml`
+`POST /api/evals` (and `faraday eval add` from a remote) validate every `task.yaml`
 and **reject `script-exit` (shell) graders by default** — set
-`BENCH_ALLOW_UPLOADED_SCRIPT_GRADERS=1` to allow them. Archives are capped at 5 MB /
+`FARADAY_ALLOW_UPLOADED_SCRIPT_GRADERS=1` to allow them. Archives are capped at 5 MB /
 500 entries; path-traversal entries are refused; a bad task rejects the whole
 archive, leaving nothing installed.
 

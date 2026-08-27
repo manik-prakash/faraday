@@ -1,6 +1,6 @@
 # Design decisions
 
-Why `bench` is built the way it is, and what the tradeoffs were.
+Why `faraday` is built the way it is, and what the tradeoffs were.
 
 ## Sandboxing: Docker, not gVisor / Firecracker / a managed sandbox
 
@@ -37,7 +37,7 @@ wasn't worth the path-mapping complexity now.
 
 ## No schema migrations (yet)
 
-`bench db-init --reset` drops and recreates. Fine while the project is pre-data and
+`faraday db-init --reset` drops and recreates. Fine while the project is pre-data and
 solo. Alembic is the obvious upgrade the moment there's a leaderboard worth
 preserving.
 

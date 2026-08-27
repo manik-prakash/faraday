@@ -1,4 +1,4 @@
-# bench — bring-your-own-agent benchmark platform
+# Faraday — bring-your-own-agent benchmark platform
 
 A self-hostable platform where anyone ships their AI agent as a Docker image, runs it
 against curated benchmarks (or brings their own evals), and gets scores, cost, and full
@@ -46,20 +46,20 @@ python -m venv .venv
 .venv\Scripts\pip install -e ".[dev]"
 
 docker compose up -d --build   # postgres (:15432) + redis (:6379) + api/UI (:8000)
-bench db-init                   # add --reset after a schema change
+faraday db-init                   # add --reset after a schema change
 
-bench worker                    # terminal 2 — consumes the queue (runs on the host)
+faraday worker                    # terminal 2 — consumes the queue (runs on the host)
 
 # submit runs; scripted-agent actually solves shell-mini + datawrangle-mini
-bench submit --task evals/datawrangle-mini/tasks/d006-join --agent agents/scripted-agent
+faraday submit --task evals/datawrangle-mini/tasks/d006-join --agent agents/scripted-agent
 ./scripts/seed.ps1              # or: populate the whole leaderboard at once
 ```
 
-Local-only mode (no infra needed): `bench run local --task ... --agent ...`
+Local-only mode (no infra needed): `faraday run local --task ... --agent ...`
 
 Bring your own model keys: `--env OPENAI_API_KEY=sk-...` / `--env-file .env` on
-`bench submit` and `bench run local` (see `docs/agent-contract.md`). Bring your own
-eval: `bench eval add ./my-eval --name my-eval` (see `docs/byo-eval.md`).
+`faraday submit` and `faraday run local` (see `docs/agent-contract.md`). Bring your own
+eval: `faraday eval add ./my-eval --name my-eval` (see `docs/byo-eval.md`).
 Sharing & config: `docs/deploy.md`.
 
 Run the tests: `pytest -m "not docker"` (add a daemon and drop the filter for the
@@ -70,7 +70,7 @@ end-to-end suite).
 ```powershell
 cd web
 npm install
-npm run build                 # production build → served by `bench serve` at /
+npm run build                 # production build → served by `faraday serve` at /
 npm run dev                   # dev server on :5173 with /api proxied to :8000
 ```
 
@@ -79,7 +79,7 @@ Pages:
 - **Run detail** (`/#/runs/<id>`) — status/score/meta, step-through **trajectory timeline**, agent log viewer
 
 Note: this machine already had native/other Postgres instances on 5432–5434, so the
-compose file maps ours to host port **15432** (override with `BENCH_DATABASE_URL`).
+compose file maps ours to host port **15432** (override with `FARADAY_DATABASE_URL`).
 
 ## Bring your own agent + eval
 
@@ -88,7 +88,7 @@ Five steps, end to end: **`docs/byo-quickstart.md`**. Starting points:
 to upload). An agent is any Docker image (built here or referenced by
 `image: ghcr.io/you/agent:v1`) following `docs/agent-contract.md`; an eval is a
 `tasks/<id>/` tree following `docs/task-spec.md`, installed with
-`bench eval add ./my-eval --name my-eval` or the web UI's **Evals** panel.
+`faraday eval add ./my-eval --name my-eval` or the web UI's **Evals** panel.
 
 ## Contracts & docs
 

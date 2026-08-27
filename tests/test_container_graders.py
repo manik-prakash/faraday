@@ -4,9 +4,9 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from bench.grading.base import GraderContext
-from bench.grading.container_graders import ScriptExitGrader_
-from bench.spec import ScriptExitGrader
+from faraday.grading.base import GraderContext
+from faraday.grading.container_graders import ScriptExitGrader_
+from faraday.spec import ScriptExitGrader
 
 
 def _ctx(tmp_path: Path, **kw) -> GraderContext:
@@ -51,5 +51,5 @@ def test_crlf_grader_script_is_normalised_to_lf(tmp_path: Path) -> None:
 
     ScriptExitGrader_(ScriptExitGrader(type="script-exit", script="grader.sh")).grade(ctx)
 
-    staged = (ctx.workspace / ".bench-grader" / "grader.sh").read_bytes()
+    staged = (ctx.workspace / ".faraday-grader" / "grader.sh").read_bytes()
     assert b"\r" not in staged

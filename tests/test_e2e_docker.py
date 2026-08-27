@@ -21,8 +21,8 @@ SCRIPTED = REPO / "agents" / "scripted-agent"
 
 @pytest.fixture(scope="module")
 def runner():
-    from bench.exceptions import DockerUnavailable
-    from bench.orchestrator.runner import LocalRunner
+    from faraday.exceptions import DockerUnavailable
+    from faraday.orchestrator.runner import LocalRunner
 
     try:
         return LocalRunner(REPO)
@@ -31,7 +31,7 @@ def runner():
 
 
 def test_file_match_task_passes(runner, tmp_path, monkeypatch) -> None:
-    monkeypatch.setenv("BENCH_RUNS_DIR", str(tmp_path))
+    monkeypatch.setenv("FARADAY_RUNS_DIR", str(tmp_path))
     result, run_dir = runner.run(
         REPO / "evals" / "shell-mini" / "tasks" / "t001-hello", SCRIPTED
     )
@@ -41,7 +41,7 @@ def test_file_match_task_passes(runner, tmp_path, monkeypatch) -> None:
 
 
 def test_script_exit_task_passes(runner, tmp_path, monkeypatch) -> None:
-    monkeypatch.setenv("BENCH_RUNS_DIR", str(tmp_path))
+    monkeypatch.setenv("FARADAY_RUNS_DIR", str(tmp_path))
     result, _ = runner.run(
         REPO / "evals" / "shell-mini" / "tasks" / "t003-dedupe", SCRIPTED
     )
@@ -51,7 +51,7 @@ def test_script_exit_task_passes(runner, tmp_path, monkeypatch) -> None:
 def test_script_exit_failure_is_clean_not_error(runner, tmp_path, monkeypatch) -> None:
     # dummy-agent doesn't solve t003, so the grader script exits non-zero:
     # the run must land in `failed`, not `error`, with the script tail in detail.
-    monkeypatch.setenv("BENCH_RUNS_DIR", str(tmp_path))
+    monkeypatch.setenv("FARADAY_RUNS_DIR", str(tmp_path))
     result, _ = runner.run(
         REPO / "evals" / "shell-mini" / "tasks" / "t003-dedupe",
         REPO / "agents" / "dummy-agent",
@@ -61,7 +61,7 @@ def test_script_exit_failure_is_clean_not_error(runner, tmp_path, monkeypatch) -
 
 
 def test_datawrangle_task_passes(runner, tmp_path, monkeypatch) -> None:
-    monkeypatch.setenv("BENCH_RUNS_DIR", str(tmp_path))
+    monkeypatch.setenv("FARADAY_RUNS_DIR", str(tmp_path))
     result, _ = runner.run(
         REPO / "evals" / "datawrangle-mini" / "tasks" / "d006-join", SCRIPTED
     )

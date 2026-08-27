@@ -4,7 +4,7 @@ import json
 
 import redis
 
-from bench.config import EVENTS_CHANNEL, QUEUE_KEY, REDIS_URL
+from faraday.config import EVENTS_CHANNEL, QUEUE_KEY, REDIS_URL
 
 
 def connection() -> redis.Redis:

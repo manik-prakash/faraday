@@ -1,24 +1,24 @@
 services:
   postgres:
     image: postgres:17-alpine
-    container_name: bench-postgres
+    container_name: faraday-postgres
     environment:
-      POSTGRES_USER: bench
-      POSTGRES_PASSWORD: bench
-      POSTGRES_DB: bench
+      POSTGRES_USER: faraday
+      POSTGRES_PASSWORD: faraday
+      POSTGRES_DB: faraday
     ports:
       - "15432:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U bench"]
+      test: ["CMD-SHELL", "pg_isready -U faraday"]
       interval: 5s
       timeout: 3s
       retries: 10
 
   redis:
     image: redis:7-alpine
-    container_name: bench-redis
+    container_name: faraday-redis
     ports:
       - "6379:6379"
     volumes:
@@ -30,16 +30,16 @@ services:
       retries: 10
 
   # API + web UI. `docker compose up` gives you http://localhost:8000 with the
-  # leaderboard served. Run the worker on the HOST (`bench worker`) — it launches
+  # leaderboard served. Run the worker on the HOST (`faraday worker`) — it launches
   # sibling Docker containers and needs host paths the daemon can see.
   api:
     build: .
-    container_name: bench-api
+    container_name: faraday-api
     environment:
-      BENCH_DATABASE_URL: postgresql+psycopg://bench:bench@postgres:5432/bench
-      BENCH_REDIS_URL: redis://redis:6379/0
-      BENCH_API_HOST: 0.0.0.0
-      BENCH_CORS_ORIGINS: "*"
+      FARADAY_DATABASE_URL: postgresql+psycopg://faraday:faraday@postgres:5432/faraday
+      FARADAY_REDIS_URL: redis://redis:6379/0
+      FARADAY_API_HOST: 0.0.0.0
+      FARADAY_CORS_ORIGINS: "*"
     ports:
       - "8000:8000"
     depends_on:

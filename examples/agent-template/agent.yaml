@@ -4,7 +4,7 @@ version: 0.1.0
 
 # Option A — let the platform build this directory:
 build: .
-tag: bench/my-agent:0.1.0
+tag: faraday/my-agent:0.1.0
 
 # Option B — point at an image you already pushed (delete the two lines above):
 # image: ghcr.io/you/my-agent:v1

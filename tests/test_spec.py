@@ -7,8 +7,8 @@ from pathlib import Path
 
 import pytest
 
-from bench.exceptions import SpecError
-from bench.spec import (
+from faraday.exceptions import SpecError
+from faraday.spec import (
     AgentManifest,
     FileMatchGrader,
     JsonFieldGrader,

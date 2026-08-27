@@ -6,9 +6,9 @@ from pathlib import Path
 
 import pytest
 
-from bench.grading import run_grader
-from bench.grading.base import GraderContext
-from bench.spec import FileMatchGrader, FileRegexGrader, JsonFieldGrader
+from faraday.grading import run_grader
+from faraday.grading.base import GraderContext
+from faraday.spec import FileMatchGrader, FileRegexGrader, JsonFieldGrader
 
 
 def _ctx(tmp_path: Path, files: dict[str, str]) -> GraderContext:

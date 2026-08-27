@@ -3,7 +3,7 @@
 Every benchmark task is a directory:
 
 ```
-evals/<bench>/tasks/<task-id>/
+evals/<eval>/tasks/<task-id>/
 ├── task.yaml
 └── files/            # static input files copied into /task/input
 ```

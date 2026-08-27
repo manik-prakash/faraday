@@ -10,11 +10,11 @@ from pathlib import Path
 import docker
 from docker.errors import APIError, DockerException, ImageNotFound
 
-from bench.exceptions import DockerUnavailable, RunnerError
-from bench.grading import run_grader
-from bench.grading.base import GraderContext
-from bench.spec import AgentManifest, TaskSpec, dump_task_json, load_agent, load_task
-from bench.store.artifacts import RunLayout, RunResult, make_run_id, utcnow_iso
+from faraday.exceptions import DockerUnavailable, RunnerError
+from faraday.grading import run_grader
+from faraday.grading.base import GraderContext
+from faraday.spec import AgentManifest, TaskSpec, dump_task_json, load_agent, load_task
+from faraday.store.artifacts import RunLayout, RunResult, make_run_id, utcnow_iso
 
 STATUS_PASSED = "passed"
 STATUS_FAILED = "failed"
@@ -144,7 +144,7 @@ class LocalRunner:
             self.client,
             spec.env.image,
             tdir / spec.env.build if spec.env.build else None,
-            None if spec.env.image else f"bench/task-{spec.id}:{spec.version}",
+            None if spec.env.image else f"faraday/task-{spec.id}:{spec.version}",
         )
         agent_ref = _ensure_image(
             self.client,
@@ -155,7 +155,7 @@ class LocalRunner:
 
         started = utcnow_iso()
         t0 = time.monotonic()
-        staging = Path(tempfile.mkdtemp(prefix=f"bench-{run_id}-"))
+        staging = Path(tempfile.mkdtemp(prefix=f"faraday-{run_id}-"))
         workspace = staging / "workspace"
         (workspace / "input").mkdir(parents=True)
         (workspace / "output").mkdir(parents=True)
@@ -170,7 +170,7 @@ class LocalRunner:
         shutil.copy2(tdir / "task.yaml", layout.run_dir / "task.yaml")
         _make_world_writable(workspace)
 
-        net = self.client.networks.create(f"bench-net-{run_id}", driver="bridge")
+        net = self.client.networks.create(f"faraday-net-{run_id}", driver="bridge")
         task_env = None
         agent = None
         timed_out = False

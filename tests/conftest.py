@@ -1,6 +1,6 @@
 """Shared test configuration.
 
-Point the platform at a throwaway SQLite database BEFORE any ``bench`` module is
+Point the platform at a throwaway SQLite database BEFORE any ``faraday`` module is
 imported, so API/DB tests never touch the real Postgres instance.
 """
 
@@ -10,8 +10,8 @@ import os
 import tempfile
 from pathlib import Path
 
-_TMP_DB = Path(tempfile.gettempdir()) / "bench-test.sqlite"
-os.environ.setdefault("BENCH_DATABASE_URL", f"sqlite+pysqlite:///{_TMP_DB.as_posix()}")
+_TMP_DB = Path(tempfile.gettempdir()) / "faraday-test.sqlite"
+os.environ.setdefault("FARADAY_DATABASE_URL", f"sqlite+pysqlite:///{_TMP_DB.as_posix()}")
 
 import importlib.util  # noqa: E402
 
@@ -35,7 +35,7 @@ def load_agent_solver(agent_dir_name: str):
 @pytest.fixture
 def fresh_db():
     """Drop + recreate all tables around a test that needs a clean database."""
-    from bench.store.db import Base, get_engine, get_sessionmaker
+    from faraday.store.db import Base, get_engine, get_sessionmaker
 
     engine = get_engine()
     Base.metadata.drop_all(engine)

@@ -3,7 +3,7 @@
 You have an agent and a set of tasks. Here's the whole loop. (Reference copies live
 in `examples/agent-template/` and `examples/sample-eval/`.)
 
-Assumes the platform is running: `docker compose up -d --build` + `bench worker` on
+Assumes the platform is running: `docker compose up -d --build` + `faraday worker` on
 the host (see `docs/deploy.md`).
 
 ## 1. Write your agent
@@ -52,18 +52,18 @@ my-eval/
 Install it:
 
 ```powershell
-bench eval add ./my-eval --name my-eval
+faraday eval add ./my-eval --name my-eval
 # or, against a remote instance, from the web UI's "Evals" panel (upload a .zip of tasks/)
 ```
 
 A public instance rejects `script-exit` (shell) graders in uploaded evals unless it
-sets `BENCH_ALLOW_UPLOADED_SCRIPT_GRADERS=1`. `bench eval add` trusts local zips
+sets `FARADAY_ALLOW_UPLOADED_SCRIPT_GRADERS=1`. `faraday eval add` trusts local zips
 (`--no-shell-graders` to opt out).
 
 ## 5. Run it
 
 ```powershell
-bench submit --task evals/my-eval/tasks/m001-thing --agent ./my-agent `
+faraday submit --task evals/my-eval/tasks/m001-thing --agent ./my-agent `
   --env OPENAI_API_KEY=sk-...        # keys go to the agent container only; names logged, not values
 ```
 

@@ -13,9 +13,9 @@ from pathlib import Path
 import pytest
 from conftest import load_agent_solver
 
-from bench.grading import run_grader
-from bench.grading.base import GraderContext
-from bench.spec import load_task
+from faraday.grading import run_grader
+from faraday.grading.base import GraderContext
+from faraday.spec import load_task
 
 REPO = Path(__file__).resolve().parent.parent
 solve = load_agent_solver("scripted-agent")

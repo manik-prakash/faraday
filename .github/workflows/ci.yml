@@ -15,7 +15,7 @@ jobs:
           python-version: "3.12"
       - run: pip install -e ".[dev]"
       - name: ruff
-        run: ruff check bench/ tests/ agents/
+        run: ruff check faraday/ tests/ agents/
       - name: pytest
         run: pytest -m "not docker" -q
 

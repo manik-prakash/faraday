@@ -2,8 +2,8 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from bench.grading.base import BaseGrader, GraderContext, GraderOutcome
-from bench.spec import ScriptExitGrader
+from faraday.grading.base import BaseGrader, GraderContext, GraderOutcome
+from faraday.spec import ScriptExitGrader
 
 CONTAINER_GRADERS: dict[str, type[BaseGrader]] = {}
 
@@ -31,14 +31,14 @@ class ScriptExitGrader_(BaseGrader):
                 0.0, False, "script-exit grader needs a live task-env container; none available"
             )
 
-        host_dir = ctx.workspace / ".bench-grader"
+        host_dir = ctx.workspace / ".faraday-grader"
         host_dir.mkdir(parents=True, exist_ok=True)
         host_script = host_dir / Path(self.spec.script).name
         # normalise CRLF -> LF: bash rejects `set -o pipefail\r` from a
         # Windows-authored grader.sh (common in an uploaded BYO-eval).
         host_script.write_bytes(script_src.read_bytes().replace(b"\r\n", b"\n"))
 
-        container_path = f"/task/.bench-grader/{host_script.name}"
+        container_path = f"/task/.faraday-grader/{host_script.name}"
         result = ctx.task_container.exec_run(
             ["timeout", str(ctx.timeout_s), "bash", container_path],
             workdir="/task",

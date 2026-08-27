@@ -5,7 +5,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-from bench.orchestrator.runner import _read_usage
+from faraday.orchestrator.runner import _read_usage
 
 
 def _write_usage(workspace: Path, payload: str) -> None:

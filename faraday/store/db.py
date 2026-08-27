@@ -6,7 +6,7 @@ from datetime import UTC, datetime
 from sqlalchemy import JSON, Boolean, DateTime, Float, Integer, String, Text
 from sqlalchemy.orm import DeclarativeBase, Mapped, Session, mapped_column, sessionmaker
 
-from bench.config import DATABASE_URL
+from faraday.config import DATABASE_URL
 
 
 class Base(DeclarativeBase):

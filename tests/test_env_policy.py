@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from bench.env_policy import EnvPolicyError, sanitize_agent_env
+from faraday.env_policy import EnvPolicyError, sanitize_agent_env
 
 
 def test_api_key_suffix_is_allowed() -> None:
@@ -13,7 +13,7 @@ def test_api_key_suffix_is_allowed() -> None:
 
 
 def test_known_provider_prefixes_are_allowed() -> None:
-    env = {"ANTHROPIC_BASE_URL": "https://x", "BENCH_MODEL": "gpt-4o"}
+    env = {"ANTHROPIC_BASE_URL": "https://x", "FARADAY_MODEL": "gpt-4o"}
     assert sanitize_agent_env(env) == env
 
 

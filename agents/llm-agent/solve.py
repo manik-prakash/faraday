@@ -7,8 +7,8 @@ factual / computational tasks (gaia-mini style).
 
 Env:
   OPENAI_API_KEY / ANTHROPIC_API_KEY   the key (one of; picked automatically)
-  BENCH_LLM_PROVIDER   openai | anthropic   (default: whichever key is present)
-  BENCH_LLM_MODEL      model id             (default: gpt-4o-mini / claude-haiku-4-5)
+  FARADAY_LLM_PROVIDER   openai | anthropic   (default: whichever key is present)
+  FARADAY_LLM_MODEL      model id             (default: gpt-4o-mini / claude-haiku-4-5)
 
 stdlib only — no pip install, image stays `python:3.12-slim`.
 """
@@ -118,16 +118,16 @@ def _http_json(url: str, headers: dict, body: bytes) -> dict:
 
 
 def _make_call_llm():
-    provider = os.environ.get("BENCH_LLM_PROVIDER", "").lower()
+    provider = os.environ.get("FARADAY_LLM_PROVIDER", "").lower()
     if not provider:
         provider = "anthropic" if os.environ.get("ANTHROPIC_API_KEY") else "openai"
     if provider == "anthropic":
         key = os.environ["ANTHROPIC_API_KEY"]
-        model = os.environ.get("BENCH_LLM_MODEL", "claude-haiku-4-5")
+        model = os.environ.get("FARADAY_LLM_MODEL", "claude-haiku-4-5")
         build, parse = anthropic_request, parse_anthropic_response
     else:
         key = os.environ["OPENAI_API_KEY"]
-        model = os.environ.get("BENCH_LLM_MODEL", "gpt-4o-mini")
+        model = os.environ.get("FARADAY_LLM_MODEL", "gpt-4o-mini")
         build, parse = openai_request, parse_openai_response
 
     def call_llm(prompt: str) -> tuple[str, dict]:

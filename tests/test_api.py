@@ -14,7 +14,7 @@ T001 = REPO / "evals" / "shell-mini" / "tasks" / "t001-hello"
 
 @pytest.fixture
 def client(fresh_db):
-    from bench.api.main import app
+    from faraday.api.main import app
 
     with TestClient(app) as c:
         yield c
@@ -32,7 +32,7 @@ def test_submit_rejects_unknown_task_path(client) -> None:
 
 def test_submit_queues_run_and_persists_row(client, monkeypatch) -> None:
     calls: list[dict] = []
-    monkeypatch.setattr("bench.api.main.enqueue", calls.append)
+    monkeypatch.setattr("faraday.api.main.enqueue", calls.append)
 
     r = client.post("/api/runs", json={"task": str(T001), "agent": str(DUMMY_AGENT)})
     assert r.status_code == 200
@@ -67,7 +67,7 @@ def test_post_eval_archive_installs_and_registers(client, tmp_path, monkeypatch)
     import io
     import zipfile
 
-    from bench.api import main as api_main
+    from faraday.api import main as api_main
 
     monkeypatch.setattr(api_main, "EVALS_DIR", tmp_path / "evals")
     buf = io.BytesIO()
@@ -90,7 +90,7 @@ def test_post_eval_with_shell_grader_is_refused_by_default(client, tmp_path, mon
     import io
     import zipfile
 
-    from bench.api import main as api_main
+    from faraday.api import main as api_main
 
     monkeypatch.setattr(api_main, "EVALS_DIR", tmp_path / "evals")
     monkeypatch.setattr(api_main, "ALLOW_UPLOADED_SCRIPT_GRADERS", False)
@@ -110,7 +110,7 @@ def test_post_eval_with_shell_grader_is_refused_by_default(client, tmp_path, mon
 
 def test_submit_with_allowed_env_queues_without_leaking_values(client, monkeypatch) -> None:
     jobs: list[dict] = []
-    monkeypatch.setattr("bench.api.main.enqueue", jobs.append)
+    monkeypatch.setattr("faraday.api.main.enqueue", jobs.append)
 
     r = client.post(
         "/api/runs",
@@ -128,7 +128,7 @@ def test_submit_with_allowed_env_queues_without_leaking_values(client, monkeypat
 
 
 def test_submit_with_disallowed_env_is_rejected(client, monkeypatch) -> None:
-    monkeypatch.setattr("bench.api.main.enqueue", lambda job: None)
+    monkeypatch.setattr("faraday.api.main.enqueue", lambda job: None)
     r = client.post(
         "/api/runs",
         json={"task": str(T001), "agent": str(DUMMY_AGENT), "env": {"LD_PRELOAD": "/evil.so"}},
@@ -138,7 +138,7 @@ def test_submit_with_disallowed_env_is_rejected(client, monkeypatch) -> None:
 
 
 def test_leaderboard_takes_best_score_per_agent(client, fresh_db) -> None:
-    from bench.store.db import Run
+    from faraday.store.db import Run
 
     SessionLocal = fresh_db
     with SessionLocal() as s:
@@ -158,7 +158,7 @@ def test_leaderboard_takes_best_score_per_agent(client, fresh_db) -> None:
 
 
 def test_leaderboard_reports_average_cost(client, fresh_db) -> None:
-    from bench.store.db import Run
+    from faraday.store.db import Run
 
     SessionLocal = fresh_db
     with SessionLocal() as s:

@@ -5,7 +5,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
-from bench.spec import GraderSpec
+from faraday.spec import GraderSpec
 
 
 @dataclass

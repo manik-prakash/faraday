@@ -10,8 +10,8 @@ import zipfile
 from collections.abc import Iterator
 from pathlib import Path
 
-from bench.exceptions import SpecError
-from bench.spec import load_task
+from faraday.exceptions import SpecError
+from faraday.spec import load_task
 
 _EVAL_NAME = re.compile(r"^[a-z0-9][a-z0-9-]*$")
 MAX_ARCHIVE_BYTES = 5 * 1024 * 1024
@@ -30,9 +30,9 @@ def pack_eval_dir(src: Path) -> bytes:
 
 
 def iter_task_dirs(evals_root: Path) -> Iterator[Path]:
-    """Yield every ``evals/<bench>/tasks/<task-id>`` directory under ``evals_root``."""
-    for bench_dir in sorted(p for p in Path(evals_root).iterdir() if p.is_dir()):
-        tasks = bench_dir / "tasks"
+    """Yield every ``evals/<eval>/tasks/<task-id>`` directory under ``evals_root``."""
+    for eval_dir in sorted(p for p in Path(evals_root).iterdir() if p.is_dir()):
+        tasks = eval_dir / "tasks"
         if not tasks.is_dir():
             continue
         yield from (d for d in sorted(tasks.iterdir()) if (d / "task.yaml").is_file())
@@ -69,7 +69,7 @@ def install_eval_archive(
     if not _EVAL_NAME.match(name):
         raise SpecError(f"invalid eval name: {name!r} (use lowercase letters, digits, hyphens)")
 
-    staging = Path(tempfile.mkdtemp(prefix=f"bench-eval-{name}-"))
+    staging = Path(tempfile.mkdtemp(prefix=f"faraday-eval-{name}-"))
     try:
         _safe_extract(data, staging)
         task_root = staging / "tasks"
@@ -90,7 +90,7 @@ def install_eval_archive(
                 raise SpecError(
                     f"task '{d.name}' ships a script-exit (shell) grader; this instance "
                     "does not accept shell graders in uploaded evals "
-                    "(set BENCH_ALLOW_UPLOADED_SCRIPT_GRADERS=1 to allow)"
+                    "(set FARADAY_ALLOW_UPLOADED_SCRIPT_GRADERS=1 to allow)"
                 )
             ids.append(spec.id)
 
@@ -109,7 +109,7 @@ def sync_task_registry(session, evals_root: Path) -> int:
 
     Returns the number of rows inserted (existing rows are left untouched).
     """
-    from bench.store.db import Task
+    from faraday.store.db import Task
 
     inserted = 0
     for task_dir in iter_task_dirs(evals_root):

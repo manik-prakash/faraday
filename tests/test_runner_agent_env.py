@@ -6,8 +6,8 @@ from pathlib import Path
 
 import pytest
 
-from bench.orchestrator.runner import LocalRunner, _ensure_image
-from bench.spec import AgentManifest, TaskSpec
+from faraday.orchestrator.runner import LocalRunner, _ensure_image
+from faraday.spec import AgentManifest, TaskSpec
 
 
 class _FakeContainers:

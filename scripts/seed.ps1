@@ -1,6 +1,6 @@
 # Populate a fresh leaderboard by submitting a baseline set of runs.
-# Requires the API (bench serve / compose `api`) + a `bench worker` running.
-# Talks to the HTTP API directly - no need for `bench` on PATH.
+# Requires the API (faraday serve / compose `api`) + a `faraday worker` running.
+# Talks to the HTTP API directly - no need for `faraday` on PATH.
 param(
     [string]$Api = "http://127.0.0.1:8000"
 )

@@ -11,20 +11,20 @@ from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 from sqlalchemy import case, func
 
-from bench.config import (
+from faraday.config import (
     ALLOW_UPLOADED_SCRIPT_GRADERS,
     CORS_ORIGINS,
     EVALS_DIR,
     RUNS_DIR,
     WEB_DIST,
 )
-from bench.env_policy import EnvPolicyError, sanitize_agent_env
-from bench.evals_io import install_eval_archive, sync_task_registry
-from bench.exceptions import SpecError
-from bench.queue import enqueue
-from bench.spec import load_agent, load_task
-from bench.store.artifacts import make_run_id
-from bench.store.db import Agent, Run, Task, get_sessionmaker, init_db
+from faraday.env_policy import EnvPolicyError, sanitize_agent_env
+from faraday.evals_io import install_eval_archive, sync_task_registry
+from faraday.exceptions import SpecError
+from faraday.queue import enqueue
+from faraday.spec import load_agent, load_task
+from faraday.store.artifacts import make_run_id
+from faraday.store.db import Agent, Run, Task, get_sessionmaker, init_db
 
 
 @asynccontextmanager
@@ -38,7 +38,7 @@ async def lifespan(_app: FastAPI):
     yield
 
 
-app = FastAPI(title="bench", version="0.1.0", lifespan=lifespan)
+app = FastAPI(title="Faraday", version="0.1.0", lifespan=lifespan)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=CORS_ORIGINS,

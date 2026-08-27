@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from bench.pricing import estimate_cost_usd, resolve_price
+from faraday.pricing import estimate_cost_usd, resolve_price
 
 
 def test_exact_model_match() -> None:

@@ -71,7 +71,7 @@ export function LeaderboardPage() {
           <p className="py-8 text-center text-sm text-zinc-500">
             no results yet — submit a run with{" "}
             <code className="rounded bg-zinc-900 px-1.5 py-0.5 text-xs">
-              bench submit
+              faraday submit
             </code>
           </p>
         ) : (

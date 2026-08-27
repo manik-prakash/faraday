@@ -4,10 +4,10 @@ import json
 import traceback
 from pathlib import Path
 
-from bench.config import PROJECT_ROOT
-from bench.orchestrator.runner import LocalRunner
-from bench.queue import dequeue, publish_event
-from bench.store.db import Run, get_sessionmaker, utcnow
+from faraday.config import PROJECT_ROOT
+from faraday.orchestrator.runner import LocalRunner
+from faraday.queue import dequeue, publish_event
+from faraday.store.db import Run, get_sessionmaker, utcnow
 
 
 def _read_trajectory(run_dir: Path) -> list:
@@ -49,7 +49,7 @@ def process_job(job: dict) -> None:
         usage = result.usage or {}
         cost = None
         if usage:
-            from bench.pricing import estimate_cost_usd
+            from faraday.pricing import estimate_cost_usd
 
             cost = estimate_cost_usd(
                 usage["model"], usage["input_tokens"], usage["output_tokens"]

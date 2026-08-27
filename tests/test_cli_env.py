@@ -6,21 +6,21 @@ from pathlib import Path
 
 import pytest
 
-from bench.cli import _collect_env
-from bench.env_policy import EnvPolicyError
+from faraday.cli import _collect_env
+from faraday.env_policy import EnvPolicyError
 
 
 def test_inline_pairs_are_parsed() -> None:
-    assert _collect_env(["OPENAI_API_KEY=sk-1", "BENCH_MODEL=gpt-4o"], None) == {
+    assert _collect_env(["OPENAI_API_KEY=sk-1", "FARADAY_MODEL=gpt-4o"], None) == {
         "OPENAI_API_KEY": "sk-1",
-        "BENCH_MODEL": "gpt-4o",
+        "FARADAY_MODEL": "gpt-4o",
     }
 
 
 def test_env_file_is_read_and_comments_skipped(tmp_path: Path) -> None:
     f = tmp_path / "keys.env"
-    f.write_text("# creds\nANTHROPIC_API_KEY=sk-ant\n\nBENCH_TAG=x=y\n", encoding="utf-8")
-    assert _collect_env([], f) == {"ANTHROPIC_API_KEY": "sk-ant", "BENCH_TAG": "x=y"}
+    f.write_text("# creds\nANTHROPIC_API_KEY=sk-ant\n\nFARADAY_TAG=x=y\n", encoding="utf-8")
+    assert _collect_env([], f) == {"ANTHROPIC_API_KEY": "sk-ant", "FARADAY_TAG": "x=y"}
 
 
 def test_inline_pair_overrides_file(tmp_path: Path) -> None:

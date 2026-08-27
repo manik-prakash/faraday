@@ -3,17 +3,17 @@ from __future__ import annotations
 import json
 import re
 
-from bench.exceptions import BenchError
-from bench.grading.base import BaseGrader, GraderContext, GraderOutcome
-from bench.spec import FileMatchGrader, FileRegexGrader, JsonFieldGrader
+from faraday.exceptions import FaradayError
+from faraday.grading.base import BaseGrader, GraderContext, GraderOutcome
+from faraday.spec import FileMatchGrader, FileRegexGrader, JsonFieldGrader
 
 
 def _read(ctx: GraderContext, rel: str) -> str:
     path = (ctx.workspace / rel).resolve()
     if not path.is_relative_to(ctx.workspace.resolve()):
-        raise BenchError(f"grader path escapes workspace: {rel}")
+        raise FaradayError(f"grader path escapes workspace: {rel}")
     if not path.is_file():
-        raise BenchError(f"expected file not produced: {rel}")
+        raise FaradayError(f"expected file not produced: {rel}")
     return path.read_text(encoding="utf-8", errors="replace")
 
 
@@ -99,13 +99,13 @@ GRADERS: dict[str, type[BaseGrader]] = {
 
 
 def run_grader(spec, ctx: GraderContext) -> GraderOutcome:
-    from bench.grading.container_graders import CONTAINER_GRADERS
+    from faraday.grading.container_graders import CONTAINER_GRADERS
 
     registry = {**GRADERS, **CONTAINER_GRADERS}
     grader_cls = registry.get(spec.type)
     if grader_cls is None:
-        raise BenchError(f"unknown grader type: {spec.type}")
+        raise FaradayError(f"unknown grader type: {spec.type}")
     try:
         return grader_cls(spec).grade(ctx)
-    except BenchError as e:
+    except FaradayError as e:
         return GraderOutcome(score=0.0, passed=False, detail=str(e))

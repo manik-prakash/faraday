@@ -7,7 +7,7 @@ from typing import Annotated, Literal
 import yaml
 from pydantic import BaseModel, Field, field_validator, model_validator
 
-from bench.exceptions import SpecError
+from faraday.exceptions import SpecError
 
 
 def _safe_rel_path(p: str) -> str:

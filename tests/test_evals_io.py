@@ -8,13 +8,13 @@ from pathlib import Path
 
 import pytest
 
-from bench.evals_io import (
+from faraday.evals_io import (
     install_eval_archive,
     iter_task_dirs,
     pack_eval_dir,
     sync_task_registry,
 )
-from bench.exceptions import SpecError
+from faraday.exceptions import SpecError
 
 REPO = Path(__file__).resolve().parent.parent
 
@@ -130,7 +130,7 @@ def test_iter_task_dirs_finds_repo_evals() -> None:
 
 
 def test_sync_task_registry_upserts_rows(fresh_db) -> None:
-    from bench.store.db import Task
+    from faraday.store.db import Task
 
     SessionLocal = fresh_db
     with SessionLocal() as session:

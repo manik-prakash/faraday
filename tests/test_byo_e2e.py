@@ -36,8 +36,8 @@ _AGENT_WRITES_OK = (
 
 @pytest.fixture(scope="module")
 def runner():
-    from bench.exceptions import DockerUnavailable
-    from bench.orchestrator.runner import LocalRunner
+    from faraday.exceptions import DockerUnavailable
+    from faraday.orchestrator.runner import LocalRunner
 
     try:
         return LocalRunner(REPO)
@@ -57,7 +57,7 @@ def _write_agent(dir_: Path, entrypoint: list[str]) -> Path:
 
 
 def test_byo_eval_zip_plus_prebuilt_image_agent_scores(runner, tmp_path, monkeypatch) -> None:
-    from bench.evals_io import install_eval_archive
+    from faraday.evals_io import install_eval_archive
 
     # 1. bring an eval as a zip
     buf = io.BytesIO()
@@ -71,7 +71,7 @@ def test_byo_eval_zip_plus_prebuilt_image_agent_scores(runner, tmp_path, monkeyp
     agent_dir = _write_agent(tmp_path / "agent", ["python", "-c", _AGENT_WRITES_OK])
 
     # 3. run it
-    monkeypatch.setenv("BENCH_RUNS_DIR", str(tmp_path / "runs"))
+    monkeypatch.setenv("FARADAY_RUNS_DIR", str(tmp_path / "runs"))
     result, _ = runner.run(evals_root / "byo-demo" / "tasks" / "byo001-echo", agent_dir)
     assert result.status == "passed", result.detail
     assert result.score == 1.0
@@ -79,7 +79,7 @@ def test_byo_eval_zip_plus_prebuilt_image_agent_scores(runner, tmp_path, monkeyp
 
 
 def test_broken_byo_agent_fails_legibly(runner, tmp_path, monkeypatch) -> None:
-    from bench.evals_io import install_eval_archive
+    from faraday.evals_io import install_eval_archive
 
     buf = io.BytesIO()
     with zipfile.ZipFile(buf, "w") as zf:
@@ -89,7 +89,7 @@ def test_broken_byo_agent_fails_legibly(runner, tmp_path, monkeypatch) -> None:
 
     agent_dir = _write_agent(tmp_path / "agent", ["python", "-c", "raise SystemExit(3)"])
 
-    monkeypatch.setenv("BENCH_RUNS_DIR", str(tmp_path / "runs"))
+    monkeypatch.setenv("FARADAY_RUNS_DIR", str(tmp_path / "runs"))
     result, _ = runner.run(evals_root / "byo-demo" / "tasks" / "byo001-echo", agent_dir)
     assert result.status in {"agent_error", "failed"}
     assert result.status != "error"
