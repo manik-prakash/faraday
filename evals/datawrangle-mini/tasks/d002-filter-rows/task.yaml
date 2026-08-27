@@ -1,0 +1,19 @@
+id: d002-filter-rows
+name: Filter Rows
+description: Keep CSV rows matching a status.
+version: "1"
+instruction: >-
+  The file input/orders.csv has columns id,status,total. Write output/paid.csv containing the header plus ONLY the rows whose status is exactly paid, in the original order.
+files:
+  - src: files/orders.csv
+    dest: orders.csv
+grader:
+  type: file-match
+  path: output/paid.csv
+  expect: |-
+    id,status,total
+    1,paid,50
+    3,paid,75
+    5,paid,30
+  mode: exact
+limits: { cpus: 1.0, memory_mb: 256, timeout_s: 120 }

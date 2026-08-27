@@ -1,0 +1,13 @@
+id: g003-guitar-strings
+name: Guitar Strings
+description: Number of strings on a standard guitar.
+version: "1"
+instruction: >-
+  How many strings does a standard guitar have? Write only the number to
+  output/answer.txt.
+grader:
+  type: file-match
+  path: output/answer.txt
+  expect: "6"
+  mode: exact
+limits: { cpus: 1.0, memory_mb: 256, timeout_s: 120 }

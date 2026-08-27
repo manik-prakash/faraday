@@ -82,6 +82,16 @@ export function RunDetailPage({ runId }: { runId: string }) {
             value={run.duration_s != null ? `${run.duration_s.toFixed(2)}s` : "—"}
           />
           <Stat label="exit code" value={String(meta.exit_code ?? "—")} />
+          {(run.input_tokens != null || run.output_tokens != null) && (
+            <Stat
+              label="tokens"
+              value={`${run.input_tokens ?? 0} in / ${run.output_tokens ?? 0} out`}
+            />
+          )}
+          <Stat
+            label="cost"
+            value={run.cost_usd != null ? `$${run.cost_usd.toFixed(4)}` : "—"}
+          />
         </div>
         <div className="mt-4 grid grid-cols-1 gap-3 text-sm sm:grid-cols-2">
           <Field label="task" value={run.task_slug} />
@@ -98,6 +108,7 @@ export function RunDetailPage({ runId }: { runId: string }) {
             label="grader"
             value={meta.grader ? String(meta.grader.type ?? "—") : "—"}
           />
+          {run.model && <Field label="model" value={run.model} />}
         </div>
         <p className="mt-4 rounded-md bg-zinc-900 px-3.5 py-2.5 font-mono text-xs text-zinc-400 ring-1 ring-zinc-800">
           {run.error ?? run.detail}

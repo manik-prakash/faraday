@@ -7,7 +7,6 @@ from pathlib import Path
 from bench.config import PROJECT_ROOT
 from bench.orchestrator.runner import LocalRunner
 from bench.queue import dequeue, publish_event
-from bench.store.artifacts import utcnow_iso
 from bench.store.db import Run, get_sessionmaker, utcnow
 
 
@@ -43,8 +42,18 @@ def process_job(job: dict) -> None:
 
     try:
         runner = LocalRunner(PROJECT_ROOT)
-        result, run_dir = runner.run(task_dir, agent_dir, run_id=run_id)
+        result, run_dir = runner.run(
+            task_dir, agent_dir, run_id=run_id, env=job.get("env")
+        )
         trajectory = _read_trajectory(run_dir)
+        usage = result.usage or {}
+        cost = None
+        if usage:
+            from bench.pricing import estimate_cost_usd
+
+            cost = estimate_cost_usd(
+                usage["model"], usage["input_tokens"], usage["output_tokens"]
+            )
         with SessionLocal() as session:
             row = session.query(Run).filter_by(run_id=run_id).one()
             row.status = result.status
@@ -54,6 +63,10 @@ def process_job(job: dict) -> None:
             row.detail = result.detail
             row.trajectory = trajectory
             row.meta = result.meta
+            row.model = usage.get("model")
+            row.input_tokens = usage.get("input_tokens")
+            row.output_tokens = usage.get("output_tokens")
+            row.cost_usd = cost
             row.finished_at = utcnow()
             session.commit()
         publish_event(

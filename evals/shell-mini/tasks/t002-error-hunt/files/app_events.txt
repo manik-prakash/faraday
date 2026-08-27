@@ -1,0 +1,12 @@
+INFO service started
+ERROR db connection refused
+WARN retry scheduled
+INFO cache warmed
+ERROR timeout while reading socket
+DEBUG payload size 4123
+info all good here
+ERROR disk usage above threshold
+INFO shutdown complete
+Error this should not count
+ERROR panic in worker thread
+TRACE heartbeat ok

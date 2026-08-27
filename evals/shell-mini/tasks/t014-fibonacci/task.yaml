@@ -1,0 +1,16 @@
+id: t014-fibonacci
+name: Fibonacci Line
+description: Write the first 20 Fibonacci numbers.
+version: "1"
+instruction: >-
+  Write the first 20 Fibonacci numbers, starting from 0 and 1, to output/fib.txt as a
+  single line of space-separated decimal integers with no trailing spaces.
+grader:
+  type: file-match
+  path: output/fib.txt
+  expect: "0 1 1 2 3 5 8 13 21 34 55 89 144 233 377 610 987 1597 2584 4181"
+  mode: exact
+limits:
+  cpus: 1.0
+  memory_mb: 256
+  timeout_s: 120

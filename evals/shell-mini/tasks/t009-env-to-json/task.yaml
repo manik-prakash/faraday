@@ -1,0 +1,20 @@
+id: t009-env-to-json
+name: Env File to JSON
+description: Parse a dotenv-style file into JSON.
+version: "1"
+instruction: >-
+  The file input/config.env contains KEY=VALUE lines; lines starting with # are
+  comments and must be ignored. Convert it to output/config.json — a single JSON object
+  mapping each KEY to its VALUE as strings.
+files:
+  - src: files/config.env
+    dest: config.env
+grader:
+  type: json-field
+  path: output/config.json
+  field: DATABASE_URL
+  expect: postgres://hq@10.0.0.9:5432/prod
+limits:
+  cpus: 1.0
+  memory_mb: 256
+  timeout_s: 120

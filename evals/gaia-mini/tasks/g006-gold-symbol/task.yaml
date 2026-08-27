@@ -1,0 +1,12 @@
+id: g006-gold-symbol
+name: Chemical Symbol of Gold
+description: Chemical symbol for gold.
+version: "1"
+instruction: >-
+  What is the chemical symbol for gold? Write only the symbol to output/answer.txt.
+grader:
+  type: file-match
+  path: output/answer.txt
+  expect: "Au"
+  mode: exact
+limits: { cpus: 1.0, memory_mb: 256, timeout_s: 120 }

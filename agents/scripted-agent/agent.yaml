@@ -1,0 +1,5 @@
+id: scripted-agent
+name: Scripted Reference Agent
+version: 0.1.0
+build: .
+tag: bench/scripted-agent:0.1.0

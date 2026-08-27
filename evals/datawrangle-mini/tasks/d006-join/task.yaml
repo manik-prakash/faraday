@@ -1,0 +1,22 @@
+id: d006-join
+name: Join Two CSVs
+description: Resolve a foreign key against a lookup table.
+version: "1"
+instruction: >-
+  input/users.csv has columns id,name. input/orders.csv has columns user_id,item. Write output/joined.csv with header name,item - one row per order in orders.csv order, with name looked up from users.csv by matching user_id to id.
+files:
+  - src: files/users.csv
+    dest: users.csv
+  - src: files/orders.csv
+    dest: orders.csv
+grader:
+  type: file-match
+  path: output/joined.csv
+  expect: |-
+    name,item
+    Bob,book
+    Ann,pen
+    Bob,lamp
+    Cy,mug
+  mode: exact
+limits: { cpus: 1.0, memory_mb: 256, timeout_s: 120 }

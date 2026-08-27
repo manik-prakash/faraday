@@ -1,0 +1,19 @@
+id: d004-group-sum
+name: Group and Sum
+description: Aggregate a numeric column by a key.
+version: "1"
+instruction: >-
+  The file input/sales.csv has columns region,amount. Write output/by_region.csv with header region,total - one row per region whose total is the sum of that region's amount values. Sort rows by region ASCENDING.
+files:
+  - src: files/sales.csv
+    dest: sales.csv
+grader:
+  type: file-match
+  path: output/by_region.csv
+  expect: |-
+    region,total
+    north,125
+    south,60
+    west,60
+  mode: exact
+limits: { cpus: 1.0, memory_mb: 256, timeout_s: 120 }

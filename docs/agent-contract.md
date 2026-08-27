@@ -31,8 +31,28 @@ sets working dir `/task`. Your job:
 3. Write outputs to **`/task/output/`**
 4. Append trajectory events to **`/task/output/trajectory.jsonl`** — one JSON object
    per line: `{"ts": ..., "action": "...", "detail": {...}}`
+5. *(optional)* Write **`/task/output/usage.json`** for cost tracking — a single object
+   `{"model": "gpt-4o", "input_tokens": 1234, "output_tokens": 567}`. The platform
+   multiplies the token counts by its price table (`bench/pricing.py`) to compute
+   `cost_usd`. Omit the file if you have no usage to report; a non-object payload,
+   negative counts, or a missing `model` are ignored.
 
 Exit 0 on success. The grader inspects `/task/output/`; logs are captured from stdout/stderr.
+
+## Model API keys / environment
+
+Bring your own keys. Pass them at submit time and the platform injects them into the
+**agent container only** (never the task-env container):
+
+```
+bench submit --task ... --agent ... --env OPENAI_API_KEY=sk-... --env-file .env
+# or in the API body:  {"task": "...", "agent": "...", "env": {"OPENAI_API_KEY": "sk-..."}}
+```
+
+Only variables whose name ends in `_API_KEY` or starts with a known provider prefix
+(`OPENAI_`, `ANTHROPIC_`, `GEMINI_`, `MISTRAL_`, `BENCH_`, …) are accepted; anything
+else is rejected. The platform records only the variable **names** (`meta.env_keys`),
+never their values.
 
 ## Minimal reference implementation
 

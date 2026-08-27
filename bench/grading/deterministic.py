@@ -1,16 +1,16 @@
 from __future__ import annotations
 
+import json
 import re
-from pathlib import Path
 
 from bench.exceptions import BenchError
-from bench.grading.base import BaseGrader, GraderOutcome
-from bench.spec import FileMatchGrader, FileRegexGrader
+from bench.grading.base import BaseGrader, GraderContext, GraderOutcome
+from bench.spec import FileMatchGrader, FileRegexGrader, JsonFieldGrader
 
 
-def _read(workspace: Path, rel: str) -> str:
-    path = (workspace / rel).resolve()
-    if not path.is_relative_to(workspace.resolve()):
+def _read(ctx: GraderContext, rel: str) -> str:
+    path = (ctx.workspace / rel).resolve()
+    if not path.is_relative_to(ctx.workspace.resolve()):
         raise BenchError(f"grader path escapes workspace: {rel}")
     if not path.is_file():
         raise BenchError(f"expected file not produced: {rel}")
@@ -18,28 +18,41 @@ def _read(workspace: Path, rel: str) -> str:
 
 
 def _score(ok: bool, detail_pass: str, detail_fail: str) -> GraderOutcome:
-    return GraderOutcome(score=1.0 if ok else 0.0, passed=ok,
-                         detail=detail_pass if ok else detail_fail)
+    return GraderOutcome(
+        score=1.0 if ok else 0.0,
+        passed=ok,
+        detail=detail_pass if ok else detail_fail,
+    )
+
+
+def _truncate(value: str, limit: int = 200) -> str:
+    return value if len(value) <= limit else value[:limit] + "…"
 
 
 class FileMatchGrader_(BaseGrader):
-    def grade(self, workspace: Path) -> GraderOutcome:
+    def grade(self, ctx: GraderContext) -> GraderOutcome:
         assert isinstance(self.spec, FileMatchGrader)
-        text = _read(workspace, self.spec.path).strip()
-        expect = self.spec.expect.strip()
+        text = _read(ctx, self.spec.path)
+        expect = self.spec.expect
+        got = text.strip()
+        want = expect.strip()
+        if self.spec.ignore_case:
+            got_cmp, want_cmp = got.lower(), want.lower()
+        else:
+            got_cmp, want_cmp = got, want
         if self.spec.mode == "exact":
-            ok = text == expect
+            ok = got_cmp == want_cmp
             detail = f"exact match vs {expect!r}"
         else:
-            ok = expect in text
+            ok = want_cmp in got_cmp
             detail = f"contains {expect!r}"
-        return _score(ok, f"{detail}: PASS", f"{detail}: FAIL (got {text[:200]!r})")
+        return _score(ok, f"{detail}: PASS", f"{detail}: FAIL (got {_truncate(got)!r})")
 
 
 class FileRegexGrader_(BaseGrader):
-    def grade(self, workspace: Path) -> GraderOutcome:
+    def grade(self, ctx: GraderContext) -> GraderOutcome:
         assert isinstance(self.spec, FileRegexGrader)
-        text = _read(workspace, self.spec.path)
+        text = _read(ctx, self.spec.path)
         match = re.search(self.spec.pattern, text, re.DOTALL)
         return _score(
             match is not None,
@@ -48,17 +61,51 @@ class FileRegexGrader_(BaseGrader):
         )
 
 
+class JsonFieldGrader_(BaseGrader):
+    def grade(self, ctx: GraderContext) -> GraderOutcome:
+        assert isinstance(self.spec, JsonFieldGrader)
+        text = _read(ctx, self.spec.path)
+        try:
+            data = json.loads(text)
+        except json.JSONDecodeError as e:
+            return _score(False, "", f"invalid JSON in {self.spec.path}: {e}")
+        current: object = data
+        for part in self.spec.field.split("."):
+            if isinstance(current, dict) and part in current:
+                current = current[part]
+            else:
+                return _score(
+                    False,
+                    "",
+                    f"field {self.spec.field!r} missing (path broke at {part!r})",
+                )
+        expected: object = self.spec.expect
+        if isinstance(expected, str) and isinstance(current, str):
+            ok = current.strip() == expected.strip()
+        else:
+            ok = current == expected
+        return _score(
+            ok,
+            f"{self.spec.field} == {expected!r}: PASS",
+            f"{self.spec.field} == {expected!r}: FAIL (got {_truncate(str(current))!r})",
+        )
+
+
 GRADERS: dict[str, type[BaseGrader]] = {
     "file-match": FileMatchGrader_,
     "file-regex": FileRegexGrader_,
+    "json-field": JsonFieldGrader_,
 }
 
 
-def run_grader(spec, workspace: Path) -> GraderOutcome:
-    grader_cls = GRADERS.get(spec.type)
+def run_grader(spec, ctx: GraderContext) -> GraderOutcome:
+    from bench.grading.container_graders import CONTAINER_GRADERS
+
+    registry = {**GRADERS, **CONTAINER_GRADERS}
+    grader_cls = registry.get(spec.type)
     if grader_cls is None:
         raise BenchError(f"unknown grader type: {spec.type}")
     try:
-        return grader_cls(spec).grade(workspace)
+        return grader_cls(spec).grade(ctx)
     except BenchError as e:
         return GraderOutcome(score=0.0, passed=False, detail=str(e))

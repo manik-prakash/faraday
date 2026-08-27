@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
-from typing import Annotated, Literal, Union
+from typing import Annotated, Literal
 
 import yaml
 from pydantic import BaseModel, Field, field_validator, model_validator
@@ -38,7 +38,7 @@ class EnvSpec(BaseModel):
     build: str | None = None
 
     @model_validator(mode="after")
-    def _one_source(self) -> "EnvSpec":
+    def _one_source(self) -> EnvSpec:
         if not self.image and not self.build:
             raise ValueError("env requires either 'image' or 'build'")
         if self.image and self.build:
@@ -51,6 +51,7 @@ class FileMatchGrader(BaseModel):
     path: str
     expect: str
     mode: Literal["exact", "contains"] = "exact"
+    ignore_case: bool = False
 
     @field_validator("path")
     @classmethod
@@ -69,8 +70,30 @@ class FileRegexGrader(BaseModel):
         return _safe_rel_path(v)
 
 
+class JsonFieldGrader(BaseModel):
+    type: Literal["json-field"]
+    path: str
+    field: str = Field(min_length=1)
+    expect: str | int | float | bool
+
+    @field_validator("path")
+    @classmethod
+    def _safe(cls, v: str) -> str:
+        return _safe_rel_path(v)
+
+
+class ScriptExitGrader(BaseModel):
+    type: Literal["script-exit"]
+    script: str
+
+    @field_validator("script")
+    @classmethod
+    def _safe(cls, v: str) -> str:
+        return _safe_rel_path(v)
+
+
 GraderSpec = Annotated[
-    Union[FileMatchGrader, FileRegexGrader],
+    FileMatchGrader | FileRegexGrader | JsonFieldGrader | ScriptExitGrader,
     Field(discriminator="type"),
 ]
 
@@ -106,7 +129,7 @@ class AgentManifest(BaseModel):
     entrypoint: list[str] | None = None
 
     @model_validator(mode="after")
-    def _one_source(self) -> "AgentManifest":
+    def _one_source(self) -> AgentManifest:
         if not self.image and not self.build:
             raise ValueError("agent requires either 'image' or 'build'")
         if self.build and not self.tag:

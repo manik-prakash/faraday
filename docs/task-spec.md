@@ -35,6 +35,7 @@ grader:
   path: output/report.txt
   expect: "142"
   mode: exact           # exact | contains
+  ignore_case: false    # optional; lower-cases both sides before comparing
 ```
 
 ```yaml
@@ -43,6 +44,25 @@ grader:
   path: output/result.json
   pattern: '"status":\s*"ok"'
 ```
+
+```yaml
+grader:
+  type: json-field      # parse a JSON file, compare one dotted field
+  path: output/merged.json
+  field: services.cache.ttl_seconds
+  expect: 600           # str | int | float | bool (strings compared trimmed)
+```
+
+```yaml
+grader:
+  type: script-exit     # run a script INSIDE the task-env container; pass iff exit 0
+  script: grader.sh     # path relative to the task dir; gets /task mounted
+```
+
+`script-exit` runs the script via `timeout <limit> bash <script>` in the live task-env
+container (which has `bash` and coreutils `timeout` — both present in `python:3.12-slim`).
+Exit `124` is reported as a timeout. Script stdout/stderr (last 500 chars) is captured
+into the run detail.
 
 ## Runtime layout inside containers
 

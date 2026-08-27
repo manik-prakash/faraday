@@ -1,0 +1,19 @@
+id: d009-json-to-csv
+name: JSON to CSV
+description: Flatten an array of objects into a CSV.
+version: "1"
+instruction: >-
+  input/records.json is a JSON array of objects with keys name and age. Write output/records.csv with header name,age - one row per array element in order.
+files:
+  - src: files/records.json
+    dest: records.json
+grader:
+  type: file-match
+  path: output/records.csv
+  expect: |-
+    name,age
+    Ann,30
+    Bob,25
+    Cy,41
+  mode: exact
+limits: { cpus: 1.0, memory_mb: 256, timeout_s: 120 }

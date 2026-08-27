@@ -1,0 +1,16 @@
+id: t008-scaffold
+name: Directory Scaffold
+description: Create a nested directory structure with placeholder files.
+version: "1"
+instruction: >-
+  Create the following empty files (create parent directories as needed), all under
+  output/: project/src/main.py, project/tests/test_main.py, project/docs/index.md,
+  project/data/raw/.keep, project/data/processed/.keep. Every created file must be
+  empty (zero bytes).
+grader:
+  type: script-exit
+  script: grader.sh
+limits:
+  cpus: 1.0
+  memory_mb: 256
+  timeout_s: 120

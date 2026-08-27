@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import shutil
 import tempfile
 import time
@@ -10,6 +11,7 @@ from docker.errors import APIError, DockerException, ImageNotFound
 
 from bench.exceptions import DockerUnavailable, RunnerError
 from bench.grading import run_grader
+from bench.grading.base import GraderContext
 from bench.spec import AgentManifest, TaskSpec, dump_task_json, load_agent, load_task
 from bench.store.artifacts import RunLayout, RunResult, make_run_id, utcnow_iso
 
@@ -57,6 +59,31 @@ def _ensure_image(
     return image
 
 
+def _read_usage(workspace: Path) -> dict | None:
+    path = workspace / "output" / "usage.json"
+    if not path.is_file():
+        return None
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+    except json.JSONDecodeError:
+        return None
+    if not isinstance(data, dict):
+        return None
+    model = data.get("model")
+    input_tokens = data.get("input_tokens")
+    output_tokens = data.get("output_tokens")
+    if not isinstance(model, str):
+        return None
+    for count in (input_tokens, output_tokens):
+        if not isinstance(count, int) or isinstance(count, bool) or count < 0:
+            return None
+    return {
+        "model": model,
+        "input_tokens": input_tokens,
+        "output_tokens": output_tokens,
+    }
+
+
 def _copy_tree(src: Path, dst: Path) -> None:
     dst.mkdir(parents=True, exist_ok=True)
     for item in src.iterdir():
@@ -73,7 +100,11 @@ class LocalRunner:
         self.client = _client()
 
     def run(
-        self, task_dir: Path, agent_dir: Path, run_id: str | None = None
+        self,
+        task_dir: Path,
+        agent_dir: Path,
+        run_id: str | None = None,
+        env: dict[str, str] | None = None,
     ) -> tuple[RunResult, Path]:
         spec, tdir = load_task(task_dir)
         manifest, adir = load_agent(agent_dir)
@@ -119,7 +150,7 @@ class LocalRunner:
         try:
             task_env = self._start_task_env(task_ref, workspace, run_id, spec)
             agent = self._start_agent(
-                agent_ref, workspace, run_id, spec, manifest, net.id
+                agent_ref, workspace, run_id, spec, manifest, net.id, env=env
             )
             try:
                 wait_status = agent.wait(timeout=spec.limits.timeout_s)
@@ -134,6 +165,18 @@ class LocalRunner:
             (layout.logs_dir / "agent.log").write_bytes(
                 agent.logs(stdout=True, stderr=True, timestamps=True)
             )
+
+            usage = _read_usage(workspace)
+            outcome = run_grader(
+                spec.grader,
+                GraderContext(
+                    workspace=workspace,
+                    task_dir=tdir,
+                    docker_client=self.client,
+                    task_container=task_env,
+                ),
+            )
+            _copy_tree(workspace / "output", layout.output_dir)
         finally:
             for container in (agent, task_env):
                 if container is not None:
@@ -145,9 +188,6 @@ class LocalRunner:
                 net.remove()
             except APIError:
                 pass
-
-        outcome = run_grader(spec.grader, workspace)
-        _copy_tree(workspace / "output", layout.output_dir)
 
         if timed_out:
             status = STATUS_TIMEOUT
@@ -180,7 +220,9 @@ class LocalRunner:
                 "grader": spec.grader.model_dump(),
                 "limits": spec.limits.model_dump(),
                 "exit_code": rc,
+                "env_keys": sorted(env or {}),
             },
+            usage=usage,
         )
         result.save(layout.run_dir)
         shutil.rmtree(staging, ignore_errors=True)
@@ -221,6 +263,7 @@ class LocalRunner:
         spec: TaskSpec,
         manifest: AgentManifest,
         network_id: str,
+        env: dict[str, str] | None = None,
     ):
         kwargs: dict = {
             "detach": True,
@@ -230,6 +273,8 @@ class LocalRunner:
             "volumes": {_mount_path(workspace): {"bind": "/task", "mode": "rw"}},
             **self._limits_kwargs(spec),
         }
+        if env:
+            kwargs["environment"] = dict(env)
         if manifest.entrypoint:
             kwargs["entrypoint"] = list(manifest.entrypoint)
         try:

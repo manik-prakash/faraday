@@ -1,0 +1,18 @@
+id: t004-csv-filter
+name: CSV Filter
+description: Filter CSV rows by a numeric column.
+version: "1"
+instruction: >-
+  The file input/sales.csv has a header row and columns region,amount. Write
+  output/big_sales.csv containing ONLY the header plus rows where amount is strictly
+  greater than 100, preserving the original row order.
+files:
+  - src: files/sales.csv
+    dest: sales.csv
+grader:
+  type: script-exit
+  script: grader.sh
+limits:
+  cpus: 1.0
+  memory_mb: 256
+  timeout_s: 120

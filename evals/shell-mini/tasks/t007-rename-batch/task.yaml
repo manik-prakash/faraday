@@ -1,0 +1,22 @@
+id: t007-rename-batch
+name: Batch Rename
+description: Restore .txt.bak files back to .txt in an output tree.
+version: "1"
+instruction: >-
+  The directory input/backup/ contains files ending in .txt.bak. Copy every one of them
+  into output/restored/ with the .bak suffix removed (e.g. alpha.txt.bak becomes
+  restored/alpha.txt). Do not modify the originals.
+files:
+  - src: files/alpha.txt.bak
+    dest: backup/alpha.txt.bak
+  - src: files/beta.txt.bak
+    dest: backup/beta.txt.bak
+  - src: files/gamma.txt.bak
+    dest: backup/gamma.txt.bak
+grader:
+  type: script-exit
+  script: grader.sh
+limits:
+  cpus: 1.0
+  memory_mb: 256
+  timeout_s: 120

@@ -1,0 +1,20 @@
+id: d008-fill-nulls
+name: Fill Empty Cells
+description: Replace blank cells with a default.
+version: "1"
+instruction: >-
+  input/readings.csv has columns sensor,value and some empty value cells. Write output/filled.csv identical to the input except every empty value cell is replaced with 0. Keep the header.
+files:
+  - src: files/readings.csv
+    dest: readings.csv
+grader:
+  type: file-match
+  path: output/filled.csv
+  expect: |-
+    sensor,value
+    s1,10
+    s2,0
+    s3,7
+    s4,0
+  mode: exact
+limits: { cpus: 1.0, memory_mb: 256, timeout_s: 120 }

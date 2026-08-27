@@ -1,0 +1,7 @@
+{
+  "services": {
+    "cache": { "ttl_seconds": 600 },
+    "worker": { "concurrency": 8 }
+  },
+  "debug": true
+}

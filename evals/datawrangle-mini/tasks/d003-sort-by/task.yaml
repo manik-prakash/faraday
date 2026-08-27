@@ -1,0 +1,20 @@
+id: d003-sort-by
+name: Sort By Column
+description: Sort a CSV by a numeric column, then a tiebreaker.
+version: "1"
+instruction: >-
+  The file input/scores.csv has columns player,score. Write output/ranked.csv with the header plus all rows sorted by score DESCENDING; break ties by player name ASCENDING.
+files:
+  - src: files/scores.csv
+    dest: scores.csv
+grader:
+  type: file-match
+  path: output/ranked.csv
+  expect: |-
+    player,score
+    max,95
+    amy,92
+    bob,88
+    zoe,88
+  mode: exact
+limits: { cpus: 1.0, memory_mb: 256, timeout_s: 120 }

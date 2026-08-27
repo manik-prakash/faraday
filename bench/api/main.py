@@ -1,26 +1,41 @@
 from __future__ import annotations
 
+from contextlib import asynccontextmanager
 from datetime import datetime
 from pathlib import Path
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 from sqlalchemy import case, func
 
-from bench.config import RUNS_DIR, WEB_DIST
+from bench.config import CORS_ORIGINS, EVALS_DIR, RUNS_DIR, WEB_DIST
+from bench.env_policy import EnvPolicyError, sanitize_agent_env
+from bench.evals_io import install_eval_archive, sync_task_registry
 from bench.exceptions import SpecError
 from bench.queue import enqueue
 from bench.spec import load_agent, load_task
 from bench.store.artifacts import make_run_id
 from bench.store.db import Agent, Run, Task, get_sessionmaker, init_db
 
-app = FastAPI(title="bench", version="0.1.0")
+
+@asynccontextmanager
+async def lifespan(_app: FastAPI):
+    init_db()
+    if EVALS_DIR.is_dir():
+        SessionLocal = get_sessionmaker()
+        with SessionLocal() as session:
+            sync_task_registry(session, EVALS_DIR)
+            session.commit()
+    yield
+
+
+app = FastAPI(title="bench", version="0.1.0", lifespan=lifespan)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173", "http://127.0.0.1:5173"],
+    allow_origins=CORS_ORIGINS,
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -29,6 +44,7 @@ app.add_middleware(
 class SubmitRequest(BaseModel):
     task: str
     agent: str
+    env: dict[str, str] | None = None
 
 
 def _iso(dt: datetime | None) -> str | None:
@@ -47,6 +63,10 @@ def _run_dict(row: Run) -> dict:
         "detail": row.detail,
         "error": row.error,
         "meta": row.meta,
+        "model": row.model,
+        "input_tokens": row.input_tokens,
+        "output_tokens": row.output_tokens,
+        "cost_usd": row.cost_usd,
         "queued_at": _iso(row.queued_at),
         "started_at": _iso(row.started_at),
         "finished_at": _iso(row.finished_at),
@@ -58,11 +78,6 @@ def _bench_name(task_dir: Path) -> str:
     if p.parent.name == "tasks":
         return p.parent.parent.name
     return ""
-
-
-@app.on_event("startup")
-def _startup() -> None:
-    init_db()
 
 
 @app.get("/healthz")
@@ -78,6 +93,11 @@ def submit(req: SubmitRequest) -> dict:
         spec, _ = load_task(task_dir)
         manifest, _ = load_agent(agent_dir)
     except SpecError as e:
+        raise HTTPException(status_code=400, detail=str(e)) from None
+
+    try:
+        agent_env = sanitize_agent_env(req.env)
+    except EnvPolicyError as e:
         raise HTTPException(status_code=400, detail=str(e)) from None
 
     SessionLocal = get_sessionmaker()
@@ -105,13 +125,14 @@ def submit(req: SubmitRequest) -> dict:
         session.add(Run(run_id=run_id, task_slug=spec.id, agent_slug=manifest.id))
         session.commit()
 
-    enqueue(
-        {
-            "run_id": run_id,
-            "task_dir": str(task_dir),
-            "agent_dir": str(agent_dir),
-        }
-    )
+    job = {
+        "run_id": run_id,
+        "task_dir": str(task_dir),
+        "agent_dir": str(agent_dir),
+    }
+    if agent_env:
+        job["env"] = agent_env
+    enqueue(job)
     return {"run_id": run_id, "status": "queued"}
 
 
@@ -201,6 +222,7 @@ def leaderboard(task: str | None = None) -> dict:
                 func.count(Run.id).label("runs"),
                 func.sum(case((Run.passed.is_(True), 1), else_=0)).label("passes"),
                 func.avg(Run.duration_s).label("avg_duration"),
+                func.avg(Run.cost_usd).label("avg_cost"),
                 func.max(Run.finished_at).label("last_run"),
             )
             .filter(*query_filters)
@@ -219,11 +241,46 @@ def leaderboard(task: str | None = None) -> dict:
                 "avg_duration_s": round(float(r.avg_duration), 3)
                 if r.avg_duration is not None
                 else None,
+                "avg_cost_usd": round(float(r.avg_cost), 6)
+                if r.avg_cost is not None
+                else None,
                 "last_run": _iso(r.last_run),
             }
             for r in rows
         ]
     }
+
+
+@app.get("/api/evals")
+def list_evals() -> dict:
+    SessionLocal = get_sessionmaker()
+    with SessionLocal() as session:
+        rows = (
+            session.query(Task.bench_name, func.count(Task.id))
+            .group_by(Task.bench_name)
+            .order_by(Task.bench_name)
+            .all()
+        )
+    return {
+        "evals": [
+            {"name": name or "(unfiled)", "tasks": int(count)} for name, count in rows
+        ]
+    }
+
+
+@app.post("/api/evals")
+async def upload_eval(name: str, request: Request) -> dict:
+    data = await request.body()
+    try:
+        ids = install_eval_archive(data, name, EVALS_DIR)
+    except SpecError as e:
+        raise HTTPException(status_code=400, detail=str(e)) from None
+
+    SessionLocal = get_sessionmaker()
+    with SessionLocal() as session:
+        sync_task_registry(session, EVALS_DIR)
+        session.commit()
+    return {"name": name, "tasks": ids}
 
 
 if WEB_DIST.is_dir():

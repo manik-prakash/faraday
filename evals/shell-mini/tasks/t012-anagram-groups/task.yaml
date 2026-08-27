@@ -1,0 +1,19 @@
+id: t012-anagram-groups
+name: Anagram Groups
+description: Group words by their sorted letters into a JSON map.
+version: "1"
+instruction: >-
+  The file input/words.txt has one lowercase word per line. Group anagrams together and
+  write output/groups.json — a JSON object where each key is the word's letters sorted
+  alphabetically (e.g. "aet") and each value is the alphabetically sorted list of words
+  with that key. Include every input word exactly once across all groups.
+files:
+  - src: files/words.txt
+    dest: words.txt
+grader:
+  type: script-exit
+  script: grader.sh
+limits:
+  cpus: 1.0
+  memory_mb: 256
+  timeout_s: 120

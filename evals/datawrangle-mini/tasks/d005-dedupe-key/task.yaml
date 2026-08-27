@@ -1,0 +1,19 @@
+id: d005-dedupe-key
+name: Dedupe on Key
+description: Keep the first row per key value.
+version: "1"
+instruction: >-
+  The file input/contacts.csv has columns email,name. Write output/unique.csv keeping only the FIRST row for each distinct email, preserving the original order. Keep the header.
+files:
+  - src: files/contacts.csv
+    dest: contacts.csv
+grader:
+  type: file-match
+  path: output/unique.csv
+  expect: |-
+    email,name
+    a@x.io,Ann
+    b@x.io,Bob
+    c@x.io,Cy
+  mode: exact
+limits: { cpus: 1.0, memory_mb: 256, timeout_s: 120 }
