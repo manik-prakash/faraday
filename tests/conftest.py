@@ -13,7 +13,23 @@ from pathlib import Path
 _TMP_DB = Path(tempfile.gettempdir()) / "bench-test.sqlite"
 os.environ.setdefault("BENCH_DATABASE_URL", f"sqlite+pysqlite:///{_TMP_DB.as_posix()}")
 
+import importlib.util  # noqa: E402
+
 import pytest  # noqa: E402
+
+
+def load_agent_solver(agent_dir_name: str):
+    """Import an agent's ``solve.py`` under a unique module name.
+
+    Agents each ship a file literally called ``solve.py``; importing them as a
+    bare ``solve`` module makes them collide in ``sys.modules``.
+    """
+    mod_name = f"_agent_solve_{agent_dir_name.replace('-', '_')}"
+    path = Path(__file__).resolve().parent.parent / "agents" / agent_dir_name / "solve.py"
+    spec = importlib.util.spec_from_file_location(mod_name, path)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
 
 
 @pytest.fixture

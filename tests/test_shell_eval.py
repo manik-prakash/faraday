@@ -7,18 +7,17 @@ test instead; here we check the ``file-match`` / ``json-field`` ones.
 from __future__ import annotations
 
 import shutil
-import sys
 from pathlib import Path
 
 import pytest
+from conftest import load_agent_solver
 
 from bench.grading import run_grader
 from bench.grading.base import GraderContext
 from bench.spec import load_task
 
 REPO = Path(__file__).resolve().parent.parent
-sys.path.insert(0, str(REPO / "agents" / "scripted-agent"))
-solve = pytest.importorskip("solve")
+solve = load_agent_solver("scripted-agent")
 
 HOST_GRADED = sorted(
     d

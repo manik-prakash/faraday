@@ -56,12 +56,15 @@ def _safe_extract(data: bytes, dest: Path) -> None:
     zf.extractall(dest)
 
 
-def install_eval_archive(data: bytes, name: str, evals_root: Path) -> list[str]:
+def install_eval_archive(
+    data: bytes, name: str, evals_root: Path, *, allow_script_graders: bool = False
+) -> list[str]:
     """Extract a ``tasks/<id>/…`` zip into ``evals_root/<name>/`` and validate it.
 
     Returns the installed task ids. Raises :class:`SpecError` (leaving nothing
-    behind) if the name is bad, the archive is unsafe, it contains no task, or
-    any ``task.yaml`` fails to load.
+    behind) if the name is bad, the archive is unsafe, it contains no task, any
+    ``task.yaml`` fails to load, or — unless ``allow_script_graders`` — a task
+    ships a ``script-exit`` (arbitrary shell) grader.
     """
     if not _EVAL_NAME.match(name):
         raise SpecError(f"invalid eval name: {name!r} (use lowercase letters, digits, hyphens)")
@@ -79,7 +82,16 @@ def install_eval_archive(data: bytes, name: str, evals_root: Path) -> list[str]:
             raise SpecError("archive contains no tasks/<id>/task.yaml entries")
         ids: list[str] = []
         for d in task_dirs:
-            spec, _ = load_task(d)  # raises SpecError on any problem
+            try:
+                spec, _ = load_task(d)
+            except SpecError as e:
+                raise SpecError(f"task '{d.name}': {e}") from e
+            if spec.grader.type == "script-exit" and not allow_script_graders:
+                raise SpecError(
+                    f"task '{d.name}' ships a script-exit (shell) grader; this instance "
+                    "does not accept shell graders in uploaded evals "
+                    "(set BENCH_ALLOW_UPLOADED_SCRIPT_GRADERS=1 to allow)"
+                )
             ids.append(spec.id)
 
         final = Path(evals_root) / name

@@ -8,16 +8,12 @@ exactly what the task's grader expects.
 from __future__ import annotations
 
 import json
-import sys
 from pathlib import Path
 
 import pytest
+from conftest import load_agent_solver
 
-REPO = Path(__file__).resolve().parent.parent
-AGENT_DIR = REPO / "agents" / "scripted-agent"
-sys.path.insert(0, str(AGENT_DIR))
-
-solve = pytest.importorskip("solve")
+solve = load_agent_solver("scripted-agent")
 
 
 def _ws(tmp_path: Path, input_files: dict[str, str]) -> Path:

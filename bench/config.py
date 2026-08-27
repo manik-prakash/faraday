@@ -25,4 +25,11 @@ def _cors_origins() -> list[str]:
     return [o.strip() for o in raw.split(",") if o.strip()]
 
 
+def _flag(name: str) -> bool:
+    return os.environ.get(name, "").strip().lower() in ("1", "true", "yes", "on")
+
+
 CORS_ORIGINS = _cors_origins()
+# Allow uploaded (BYO) evals to ship script-exit / shell graders. Off by default:
+# a public instance should not run arbitrary shell from strangers.
+ALLOW_UPLOADED_SCRIPT_GRADERS = _flag("BENCH_ALLOW_UPLOADED_SCRIPT_GRADERS")

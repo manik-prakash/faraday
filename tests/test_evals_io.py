@@ -74,6 +74,47 @@ def test_install_rejects_bad_eval_name(tmp_path: Path) -> None:
         install_eval_archive(data, "../hax", tmp_path)
 
 
+_SCRIPT_TASK = """\
+id: {tid}
+name: script {tid}
+instruction: do it
+grader:
+  type: script-exit
+  script: grader.sh
+"""
+
+
+def test_uploaded_script_graders_rejected_by_default(tmp_path: Path) -> None:
+    data = _zip(
+        {
+            "tasks/u001-a/task.yaml": _SCRIPT_TASK.format(tid="u001-a"),
+            "tasks/u001-a/grader.sh": "#!/usr/bin/env bash\nexit 0\n",
+        }
+    )
+    with pytest.raises(SpecError) as exc:
+        install_eval_archive(data, "myeval", tmp_path)
+    assert "script" in str(exc.value).lower() and "u001-a" in str(exc.value)
+    assert not (tmp_path / "myeval").exists()
+
+
+def test_uploaded_script_graders_allowed_when_opted_in(tmp_path: Path) -> None:
+    data = _zip(
+        {
+            "tasks/u001-a/task.yaml": _SCRIPT_TASK.format(tid="u001-a"),
+            "tasks/u001-a/grader.sh": "#!/usr/bin/env bash\nexit 0\n",
+        }
+    )
+    ids = install_eval_archive(data, "myeval", tmp_path, allow_script_graders=True)
+    assert ids == ["u001-a"]
+
+
+def test_invalid_task_error_names_the_task_dir(tmp_path: Path) -> None:
+    data = _zip({"tasks/u007-broken/task.yaml": "id: u007-broken\nname: x\n"})
+    with pytest.raises(SpecError) as exc:
+        install_eval_archive(data, "myeval", tmp_path)
+    assert "u007-broken" in str(exc.value)
+
+
 def test_pack_eval_dir_roundtrips_through_install(tmp_path: Path) -> None:
     src = tmp_path / "src"
     (src / "tasks" / "u001-a").mkdir(parents=True)

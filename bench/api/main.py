@@ -11,7 +11,13 @@ from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 from sqlalchemy import case, func
 
-from bench.config import CORS_ORIGINS, EVALS_DIR, RUNS_DIR, WEB_DIST
+from bench.config import (
+    ALLOW_UPLOADED_SCRIPT_GRADERS,
+    CORS_ORIGINS,
+    EVALS_DIR,
+    RUNS_DIR,
+    WEB_DIST,
+)
 from bench.env_policy import EnvPolicyError, sanitize_agent_env
 from bench.evals_io import install_eval_archive, sync_task_registry
 from bench.exceptions import SpecError
@@ -272,7 +278,9 @@ def list_evals() -> dict:
 async def upload_eval(name: str, request: Request) -> dict:
     data = await request.body()
     try:
-        ids = install_eval_archive(data, name, EVALS_DIR)
+        ids = install_eval_archive(
+            data, name, EVALS_DIR, allow_script_graders=ALLOW_UPLOADED_SCRIPT_GRADERS
+        )
     except SpecError as e:
         raise HTTPException(status_code=400, detail=str(e)) from None
 

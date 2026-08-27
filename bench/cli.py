@@ -189,6 +189,9 @@ def eval_list() -> None:
 def eval_add(
     path: Path = typer.Argument(..., help="A .zip archive or a directory containing tasks/"),
     name: str = typer.Option(..., "--name", help="Eval name (lowercase, digits, hyphens)"),
+    no_shell_graders: bool = typer.Option(
+        False, "--no-shell-graders", help="Reject script-exit graders in this eval"
+    ),
 ) -> None:
     """Install a bring-your-own-eval into evals/<name>/ and register its tasks."""
     from bench.config import EVALS_DIR
@@ -198,7 +201,9 @@ def eval_add(
     path = path.expanduser()
     data = pack_eval_dir(path) if path.is_dir() else path.read_bytes()
     try:
-        ids = install_eval_archive(data, name, EVALS_DIR)
+        ids = install_eval_archive(
+            data, name, EVALS_DIR, allow_script_graders=not no_shell_graders
+        )
     except BenchError as e:
         console.print(f"[red]{e}[/red]")
         raise typer.Exit(code=2) from None

@@ -86,6 +86,28 @@ def test_post_eval_archive_installs_and_registers(client, tmp_path, monkeypatch)
     assert "uploaded-demo" in names
 
 
+def test_post_eval_with_shell_grader_is_refused_by_default(client, tmp_path, monkeypatch) -> None:
+    import io
+    import zipfile
+
+    from bench.api import main as api_main
+
+    monkeypatch.setattr(api_main, "EVALS_DIR", tmp_path / "evals")
+    monkeypatch.setattr(api_main, "ALLOW_UPLOADED_SCRIPT_GRADERS", False)
+    buf = io.BytesIO()
+    with zipfile.ZipFile(buf, "w") as zf:
+        zf.writestr(
+            "tasks/up009-sh/task.yaml",
+            "id: up009-sh\nname: sh\ninstruction: x\n"
+            "grader:\n  type: script-exit\n  script: grader.sh\n",
+        )
+        zf.writestr("tasks/up009-sh/grader.sh", "#!/usr/bin/env bash\nexit 0\n")
+
+    r = client.post("/api/evals?name=shady", content=buf.getvalue())
+    assert r.status_code == 400
+    assert "shell" in r.text.lower()
+
+
 def test_submit_with_allowed_env_queues_without_leaking_values(client, monkeypatch) -> None:
     jobs: list[dict] = []
     monkeypatch.setattr("bench.api.main.enqueue", jobs.append)
