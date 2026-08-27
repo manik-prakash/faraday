@@ -34,7 +34,9 @@ class ScriptExitGrader_(BaseGrader):
         host_dir = ctx.workspace / ".bench-grader"
         host_dir.mkdir(parents=True, exist_ok=True)
         host_script = host_dir / Path(self.spec.script).name
-        host_script.write_bytes(script_src.read_bytes())
+        # normalise CRLF -> LF: bash rejects `set -o pipefail\r` from a
+        # Windows-authored grader.sh (common in an uploaded BYO-eval).
+        host_script.write_bytes(script_src.read_bytes().replace(b"\r\n", b"\n"))
 
         container_path = f"/task/.bench-grader/{host_script.name}"
         result = ctx.task_container.exec_run(

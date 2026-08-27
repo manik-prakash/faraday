@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import shutil
+import stat
 import tempfile
 import time
 from pathlib import Path
@@ -19,6 +20,32 @@ STATUS_PASSED = "passed"
 STATUS_FAILED = "failed"
 STATUS_AGENT_ERROR = "agent_error"
 STATUS_TIMEOUT = "timeout"
+
+# Applied to every container we launch: strip capabilities, block privilege
+# escalation, cap process count, read-only rootfs with a small writable /tmp.
+# The task workspace stays writable via its own `rw` bind mount.
+_HARDENING: dict = {
+    "cap_drop": ["ALL"],
+    "security_opt": ["no-new-privileges"],
+    "pids_limit": 256,
+    "read_only": True,
+    "tmpfs": {"/tmp": "rw,size=64m"},
+}
+# uid:gid the agent runs as (nobody) — it must not run as root inside the sandbox.
+_AGENT_USER = "65534:65534"
+
+
+def _make_world_writable(root: Path) -> None:
+    """So a non-root agent can write into the bind-mounted workspace."""
+    add = stat.S_IRGRP | stat.S_IWGRP | stat.S_IROTH | stat.S_IWOTH
+    for path in (root, *root.rglob("*")):
+        try:
+            mode = path.stat().st_mode | add
+            if path.is_dir():
+                mode |= stat.S_IXGRP | stat.S_IXOTH
+            path.chmod(mode)
+        except OSError:
+            pass
 
 
 def _client() -> docker.DockerClient:
@@ -141,6 +168,7 @@ class LocalRunner:
             input_files.append(f.dest)
         dump_task_json(spec, workspace, input_files)
         shutil.copy2(tdir / "task.yaml", layout.run_dir / "task.yaml")
+        _make_world_writable(workspace)
 
         net = self.client.networks.create(f"bench-net-{run_id}", driver="bridge")
         task_env = None
@@ -247,6 +275,7 @@ class LocalRunner:
                 volumes={
                     _mount_path(workspace): {"bind": "/task", "mode": "rw"}
                 },
+                **_HARDENING,
                 **self._limits_kwargs(spec),
             )
         except APIError as e:
@@ -270,7 +299,9 @@ class LocalRunner:
             "name": f"{run_id}-agent",
             "network": network_id,
             "working_dir": "/task",
+            "user": _AGENT_USER,
             "volumes": {_mount_path(workspace): {"bind": "/task", "mode": "rw"}},
+            **_HARDENING,
             **self._limits_kwargs(spec),
         }
         if env:

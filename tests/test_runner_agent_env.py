@@ -64,3 +64,33 @@ def test_task_env_container_never_gets_env(runner: LocalRunner, tmp_path: Path) 
     runner._start_task_env("task:img", tmp_path, "rid", _spec())
     call = runner.client.containers.calls[-1]
     assert "environment" not in call
+
+
+# --- sandbox hardening -------------------------------------------------------
+
+def test_agent_container_is_locked_down(runner: LocalRunner, tmp_path: Path) -> None:
+    runner._start_agent("agent:img", tmp_path, "rid", _spec(), _manifest(), "net")
+    call = runner.client.containers.calls[-1]
+    assert call["cap_drop"] == ["ALL"]
+    assert "no-new-privileges" in call["security_opt"]
+    assert call["pids_limit"] and call["pids_limit"] <= 512
+    assert call["read_only"] is True
+    assert "/tmp" in call["tmpfs"]
+    assert str(call["user"]).startswith("65534")  # runs as nobody, not root
+
+
+def test_task_env_container_is_locked_down(runner: LocalRunner, tmp_path: Path) -> None:
+    runner._start_task_env("task:img", tmp_path, "rid", _spec())
+    call = runner.client.containers.calls[-1]
+    assert call["cap_drop"] == ["ALL"]
+    assert "no-new-privileges" in call["security_opt"]
+    assert call["pids_limit"]
+    assert call["network_mode"] == "none"  # unchanged: task env has no network
+
+
+def test_agent_still_gets_task_bind_mount_writable(runner: LocalRunner, tmp_path: Path) -> None:
+    # read-only rootfs must not stop the agent writing results to /task
+    runner._start_agent("agent:img", tmp_path, "rid", _spec(), _manifest(), "net")
+    call = runner.client.containers.calls[-1]
+    (bind,) = call["volumes"].values()
+    assert bind == {"bind": "/task", "mode": "rw"}
