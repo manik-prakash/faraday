@@ -67,11 +67,23 @@ Pages:
 Note: this machine already had native/other Postgres instances on 5432–5434, so the
 compose file maps ours to host port **15432** (override with `BENCH_DATABASE_URL`).
 
-## Contracts
+## Bring your own agent + eval
 
-- **Task contract** — `docs/task-spec.md`
-- **Agent contract** — `docs/agent-contract.md`
-- Reference agent: `agents/dummy-agent`
+Five steps, end to end: **`docs/byo-quickstart.md`**. Starting points:
+`examples/agent-template/` (copy, edit `work()`), `examples/sample-eval/` (two tasks
+to upload). An agent is any Docker image (built here or referenced by
+`image: ghcr.io/you/agent:v1`) following `docs/agent-contract.md`; an eval is a
+`tasks/<id>/` tree following `docs/task-spec.md`, installed with
+`bench eval add ./my-eval --name my-eval` or the web UI's **Evals** panel.
+
+## Contracts & docs
+
+- **Task contract** — `docs/task-spec.md` · **Agent contract** — `docs/agent-contract.md`
+- **BYO quickstart** — `docs/byo-quickstart.md` · **BYO-eval** — `docs/byo-eval.md`
+- **Security / threat model** — `docs/security.md` · **Design decisions** — `docs/DECISIONS.md`
+- **Deploy & config** — `docs/deploy.md`
+- Reference agents: `agents/dummy-agent` (minimal), `agents/scripted-agent` (keyless
+  solver), `agents/llm-agent` (real, BYO key)
 
 Artifacts land in `runs/<run-id>/`: `result.json`, `task.yaml`, `logs/agent.log`,
 `output/` (incl. `trajectory.jsonl`). Everything is also mirrored into Postgres.

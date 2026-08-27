@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { api, type LeaderRow, type RunSummary } from "../api";
+import { EvalsPanel } from "../components/EvalsPanel";
 import { StatusBadge } from "../components/StatusBadge";
 
 export function LeaderboardPage() {
@@ -44,6 +45,8 @@ export function LeaderboardPage() {
           API unreachable — is the server running? ({error})
         </div>
       )}
+
+      <EvalsPanel />
 
       <section>
         <div className="mb-3 flex items-center justify-between">

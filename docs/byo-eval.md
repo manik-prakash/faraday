@@ -35,9 +35,16 @@ curl.exe --data-binary "@my-eval.zip" "http://127.0.0.1:8000/api/evals?name=my-e
 ```
 
 Either path validates every `task.yaml` (rejecting the whole archive on the first
-error), copies it under `evals/<name>/`, and registers the tasks. Names must be
-lowercase letters, digits, and hyphens. Archives are capped at 5 MB / 500 entries
-and path-traversal entries are refused.
+error, naming the offending task), copies it under `evals/<name>/`, and registers
+the tasks. Names must be lowercase letters, digits, and hyphens. Archives are capped
+at 5 MB / 500 entries and path-traversal entries are refused.
+
+**Shell graders in uploads:** `script-exit` graders run arbitrary bash in the
+(network-`none`) task-env container. The API and remote installs **reject** them
+unless `BENCH_ALLOW_UPLOADED_SCRIPT_GRADERS=1`. `bench eval add` trusts local zips;
+pass `--no-shell-graders` to opt out.
+
+Try it: `bench eval add ./examples/sample-eval --name sample` (two file-match tasks).
 
 ## Run against it
 

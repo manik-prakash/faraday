@@ -35,6 +35,11 @@ export interface RunDetail extends RunSummary {
   };
 }
 
+export interface EvalInfo {
+  name: string;
+  tasks: number;
+}
+
 export interface LeaderRow {
   task_slug: string;
   agent_slug: string;
@@ -56,6 +61,18 @@ export const api = {
   runs: () => getJson<{ runs: RunSummary[] }>("/api/runs"),
   run: (id: string) => getJson<RunDetail>(`/api/runs/${id}`),
   leaderboard: () => getJson<{ leaderboard: LeaderRow[] }>("/api/leaderboard"),
+  evals: () => getJson<{ evals: EvalInfo[] }>("/api/evals"),
+  uploadEval: async (
+    name: string,
+    file: File,
+  ): Promise<{ name: string; tasks: string[] }> => {
+    const res = await fetch(`/api/evals?name=${encodeURIComponent(name)}`, {
+      method: "POST",
+      body: file,
+    });
+    if (!res.ok) throw new Error((await res.text()) || res.statusText);
+    return res.json() as Promise<{ name: string; tasks: string[] }>;
+  },
   logs: async (id: string): Promise<string> => {
     const res = await fetch(`/api/runs/${id}/logs`);
     if (!res.ok) throw new Error("no logs available");

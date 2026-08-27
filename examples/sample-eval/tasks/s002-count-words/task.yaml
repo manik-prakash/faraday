@@ -1,0 +1,12 @@
+id: s002-count-words
+name: Count Words
+description: Count words in a sentence.
+version: "1"
+instruction: >-
+  How many words are in the sentence 'the quick brown fox jumps'? Write only the number to output/answer.txt.
+grader:
+  type: file-match
+  path: output/answer.txt
+  expect: "5"
+  mode: exact
+limits: { cpus: 1.0, memory_mb: 256, timeout_s: 120 }

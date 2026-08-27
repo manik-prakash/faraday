@@ -54,9 +54,11 @@ Only variables whose name ends in `_API_KEY` or starts with a known provider pre
 else is rejected. The platform records only the variable **names** (`meta.env_keys`),
 never their values.
 
-## Minimal reference implementation
+## Starting points
 
-See `agents/dummy-agent/` — a stdlib-only Python agent that solves `t001-hello`.
+- **`examples/agent-template/`** — copy this, edit one function.
+- `agents/dummy-agent/` — stdlib-only, solves `t001-hello`.
+- `agents/llm-agent/` — a real BYO-key agent (one OpenAI/Anthropic call).
 
 ```dockerfile
 FROM python:3.12-slim

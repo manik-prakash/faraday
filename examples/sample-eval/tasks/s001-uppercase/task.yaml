@@ -1,0 +1,12 @@
+id: s001-uppercase
+name: Uppercase
+description: Uppercase a string.
+version: "1"
+instruction: >-
+  Write the word 'benchmark' in all uppercase letters to output/answer.txt.
+grader:
+  type: file-match
+  path: output/answer.txt
+  expect: "BENCHMARK"
+  mode: exact
+limits: { cpus: 1.0, memory_mb: 256, timeout_s: 120 }
