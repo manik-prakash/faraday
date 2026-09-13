@@ -12,7 +12,7 @@ from docker.errors import APIError, DockerException, ImageNotFound
 
 from faraday.exceptions import DockerUnavailable, RunnerError
 from faraday.grading import run_grader
-from faraday.grading.base import GraderContext
+from faraday.grading.base import GraderContext, GraderOutcome
 from faraday.spec import AgentManifest, TaskSpec, dump_task_json, load_agent, load_task
 from faraday.store.artifacts import RunLayout, RunResult, make_run_id, utcnow_iso
 
@@ -121,6 +121,16 @@ def _copy_tree(src: Path, dst: Path) -> None:
             shutil.copy2(item, target)
 
 
+def _grade_safely(grader_spec, ctx: GraderContext) -> GraderOutcome:
+    """Run the grader; never let a container/infra crash skip result.save()."""
+    try:
+        return run_grader(grader_spec, ctx)
+    except Exception as e:
+        return GraderOutcome(
+            score=0.0, passed=False, detail=f"grader crashed: {type(e).__name__}: {e}"
+        )
+
+
 class LocalRunner:
     def __init__(self, project_root: Path) -> None:
         self.project_root = Path(project_root).resolve()
@@ -195,7 +205,7 @@ class LocalRunner:
             )
 
             usage = _read_usage(workspace)
-            outcome = run_grader(
+            outcome = _grade_safely(
                 spec.grader, self._grader_context(spec, workspace, tdir, task_env)
             )
             _copy_tree(workspace / "output", layout.output_dir)
