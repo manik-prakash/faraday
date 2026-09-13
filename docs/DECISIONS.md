@@ -60,6 +60,9 @@ can't smuggle in `LD_PRELOAD` or `PATH`.
 
 ## What's next
 
-Real LLM agent (exercise the cost path end-to-end), sandbox hardening flags,
-web upload for BYO-evals, an always-on deployment, and an egress proxy — see
-`docs/byo-quickstart.md` and the project plan.
+Shipped since this was written: the real LLM agent, sandbox hardening flags,
+and web upload for BYO-evals (see `docs/byo-quickstart.md`). Still open: an
+egress-allowlist proxy for the agent container's outbound network (see
+`docs/security.md`), Alembic migrations once there's a leaderboard worth
+preserving, and moving the worker into `docker compose` (currently host-only
+by design, see above).

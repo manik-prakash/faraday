@@ -6,9 +6,14 @@ import redis
 
 from faraday.config import EVENTS_CHANNEL, QUEUE_KEY, REDIS_URL
 
+_client: redis.Redis | None = None
+
 
 def connection() -> redis.Redis:
-    return redis.Redis.from_url(REDIS_URL, decode_responses=True)
+    global _client
+    if _client is None:
+        _client = redis.Redis.from_url(REDIS_URL, decode_responses=True)
+    return _client
 
 
 def enqueue(job: dict) -> None:

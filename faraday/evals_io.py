@@ -16,6 +16,7 @@ from faraday.spec import load_task
 _EVAL_NAME = re.compile(r"^[a-z0-9][a-z0-9-]*$")
 MAX_ARCHIVE_BYTES = 5 * 1024 * 1024
 MAX_MEMBERS = 500
+MAX_UNCOMPRESSED_BYTES = 50 * 1024 * 1024
 
 
 def pack_eval_dir(src: Path) -> bytes:
@@ -45,14 +46,20 @@ def _safe_extract(data: bytes, dest: Path) -> None:
         zf = zipfile.ZipFile(io.BytesIO(data))
     except zipfile.BadZipFile as e:
         raise SpecError(f"not a valid zip archive: {e}") from e
-    names = zf.namelist()
-    if len(names) > MAX_MEMBERS:
+    infos = zf.infolist()
+    if len(infos) > MAX_MEMBERS:
         raise SpecError(f"archive has too many entries (> {MAX_MEMBERS})")
+    total_uncompressed = sum(info.file_size for info in infos)
+    if total_uncompressed > MAX_UNCOMPRESSED_BYTES:
+        raise SpecError(
+            f"archive expands to too much data "
+            f"(> {MAX_UNCOMPRESSED_BYTES} bytes uncompressed)"
+        )
     dest_resolved = dest.resolve()
-    for name in names:
-        target = (dest / name).resolve()
+    for info in infos:
+        target = (dest / info.filename).resolve()
         if not target.is_relative_to(dest_resolved):
-            raise SpecError(f"archive entry escapes destination: {name!r}")
+            raise SpecError(f"archive entry escapes destination: {info.filename!r}")
     zf.extractall(dest)
 
 

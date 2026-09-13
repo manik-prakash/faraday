@@ -9,10 +9,11 @@ from pathlib import Path
 
 import docker
 from docker.errors import APIError, DockerException, ImageNotFound
+from requests.exceptions import ReadTimeout
 
 from faraday.exceptions import DockerUnavailable, RunnerError
 from faraday.grading import run_grader
-from faraday.grading.base import GraderContext
+from faraday.grading.base import GraderContext, GraderOutcome
 from faraday.spec import AgentManifest, TaskSpec, dump_task_json, load_agent, load_task
 from faraday.store.artifacts import RunLayout, RunResult, make_run_id, utcnow_iso
 
@@ -121,6 +122,42 @@ def _copy_tree(src: Path, dst: Path) -> None:
             shutil.copy2(item, target)
 
 
+def _grade_safely(grader_spec, ctx: GraderContext) -> GraderOutcome:
+    """Run the grader; never let a container/infra crash skip result.save()."""
+    try:
+        return run_grader(grader_spec, ctx)
+    except Exception as e:
+        return GraderOutcome(
+            score=0.0, passed=False, detail=f"grader crashed: {type(e).__name__}: {e}"
+        )
+
+
+def _wait_for_agent(agent, timeout_s: int) -> tuple[bool, str | None, int]:
+    """Wait for the agent container; tell a real timeout apart from a Docker error.
+
+    Returns ``(timed_out, wait_error, exit_code)``.
+    """
+    try:
+        wait_status = agent.wait(timeout=timeout_s)
+        return False, None, int(wait_status.get("StatusCode", -1))
+    except ReadTimeout:
+        try:
+            agent.kill()
+        except APIError:
+            pass
+        return True, None, -1
+    except Exception as e:
+        return False, f"{type(e).__name__}: {e}", -1
+
+
+def _capture_agent_log(agent) -> bytes:
+    """Fetch the agent's log; a dead/removed container must not raise here."""
+    try:
+        return agent.logs(stdout=True, stderr=True, timestamps=True)
+    except (APIError, DockerException) as e:
+        return f"[faraday] could not fetch agent logs: {type(e).__name__}: {e}\n".encode()
+
+
 class LocalRunner:
     def __init__(self, project_root: Path) -> None:
         self.project_root = Path(project_root).resolve()
@@ -174,35 +211,19 @@ class LocalRunner:
         task_env = None
         agent = None
         timed_out = False
+        wait_error: str | None = None
         rc = -1
         try:
             task_env = self._start_task_env(task_ref, workspace, run_id, spec)
             agent = self._start_agent(
                 agent_ref, workspace, run_id, spec, manifest, net.id, env=env
             )
-            try:
-                wait_status = agent.wait(timeout=spec.limits.timeout_s)
-                rc = int(wait_status.get("StatusCode", -1))
-            except Exception:
-                timed_out = True
-                try:
-                    agent.kill()
-                except APIError:
-                    pass
-                rc = -1
-            (layout.logs_dir / "agent.log").write_bytes(
-                agent.logs(stdout=True, stderr=True, timestamps=True)
-            )
+            timed_out, wait_error, rc = _wait_for_agent(agent, spec.limits.timeout_s)
+            (layout.logs_dir / "agent.log").write_bytes(_capture_agent_log(agent))
 
             usage = _read_usage(workspace)
-            outcome = run_grader(
-                spec.grader,
-                GraderContext(
-                    workspace=workspace,
-                    task_dir=tdir,
-                    docker_client=self.client,
-                    task_container=task_env,
-                ),
+            outcome = _grade_safely(
+                spec.grader, self._grader_context(spec, workspace, tdir, task_env)
             )
             _copy_tree(workspace / "output", layout.output_dir)
         finally:
@@ -217,7 +238,10 @@ class LocalRunner:
             except APIError:
                 pass
 
-        if timed_out:
+        if wait_error:
+            status = STATUS_AGENT_ERROR
+            detail = f"agent container error: {wait_error}; {outcome.detail}"
+        elif timed_out:
             status = STATUS_TIMEOUT
             detail = f"agent exceeded {spec.limits.timeout_s}s limit; {outcome.detail}"
         elif rc != 0:
@@ -261,6 +285,17 @@ class LocalRunner:
             "mem_limit": f"{spec.limits.memory_mb}m",
             "nano_cpus": int(spec.limits.cpus * 1e9),
         }
+
+    def _grader_context(
+        self, spec: TaskSpec, workspace: Path, task_dir: Path, task_container
+    ) -> GraderContext:
+        return GraderContext(
+            workspace=workspace,
+            task_dir=task_dir,
+            docker_client=self.client,
+            task_container=task_container,
+            timeout_s=spec.limits.timeout_s,
+        )
 
     def _start_task_env(
         self, image_ref: str, workspace: Path, run_id: str, spec: TaskSpec

@@ -129,6 +129,19 @@ def test_iter_task_dirs_finds_repo_evals() -> None:
     assert {"t001-hello", "g001-periodic-count", "d001-select-columns"} <= names
 
 
+def test_install_rejects_a_decompression_bomb(tmp_path: Path) -> None:
+    buf = io.BytesIO()
+    with zipfile.ZipFile(buf, "w", zipfile.ZIP_DEFLATED) as zf:
+        zf.writestr("tasks/u001-a/task.yaml", _TASK_YAML.format(tid="u001-a"))
+        zf.writestr("tasks/u001-a/files/bomb.bin", b"0" * (60 * 1024 * 1024))
+    data = buf.getvalue()
+    assert len(data) < 1024 * 1024  # compresses to well under the 5 MB archive cap
+
+    with pytest.raises(SpecError):
+        install_eval_archive(data, "myeval", tmp_path)
+    assert not (tmp_path / "myeval").exists()
+
+
 def test_sync_task_registry_upserts_rows(fresh_db) -> None:
     from faraday.store.db import Task
 

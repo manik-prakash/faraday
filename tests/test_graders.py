@@ -118,6 +118,23 @@ def test_json_field_string_compare_is_trimmed(tmp_path: Path) -> None:
     assert out.passed
 
 
+def test_json_field_bool_does_not_match_int(tmp_path: Path) -> None:
+    # bool is a subclass of int in Python; `expect: 1` must not match a JSON `true`.
+    ctx = _ctx(tmp_path, {"output/o.json": '{"ok": true}'})
+    out = run_grader(
+        JsonFieldGrader(type="json-field", path="output/o.json", field="ok", expect=1), ctx
+    )
+    assert not out.passed
+
+
+def test_json_field_bool_matches_bool(tmp_path: Path) -> None:
+    ctx = _ctx(tmp_path, {"output/o.json": '{"ok": true}'})
+    out = run_grader(
+        JsonFieldGrader(type="json-field", path="output/o.json", field="ok", expect=True), ctx
+    )
+    assert out.passed
+
+
 # ---- run_grader dispatch --------------------------------------------------
 
 def test_unknown_grader_type_raises(tmp_path: Path) -> None:
