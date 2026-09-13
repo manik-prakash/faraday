@@ -82,6 +82,10 @@ class JsonFieldGrader_(BaseGrader):
         expected: object = self.spec.expect
         if isinstance(expected, str) and isinstance(current, str):
             ok = current.strip() == expected.strip()
+        elif isinstance(expected, bool) or isinstance(current, bool):
+            # bool is a subclass of int in Python; without this guard `expect: 1`
+            # would wrongly match a JSON `true` (and `expect: 0` a `false`).
+            ok = isinstance(current, bool) and isinstance(expected, bool) and current == expected
         else:
             ok = current == expected
         return _score(
