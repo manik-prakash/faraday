@@ -27,20 +27,24 @@ def _read_trajectory(run_dir: Path) -> list:
 
 
 def process_job(job: dict) -> None:
-    run_id: str = job["run_id"]
-    task_dir = Path(job["task_dir"])
-    agent_dir = Path(job["agent_dir"])
+    run_id = job.get("run_id")
+    if not run_id:
+        print(f"[worker] dropping malformed job (no run_id): {job!r}")
+        return
+
     SessionLocal = get_sessionmaker()
-
-    with SessionLocal() as session:
-        row = session.query(Run).filter_by(run_id=run_id).one_or_none()
-        if row is None:
-            return
-        row.status = "running"
-        row.started_at = row.started_at or utcnow()
-        session.commit()
-
     try:
+        task_dir = Path(job["task_dir"])
+        agent_dir = Path(job["agent_dir"])
+
+        with SessionLocal() as session:
+            row = session.query(Run).filter_by(run_id=run_id).one_or_none()
+            if row is None:
+                return
+            row.status = "running"
+            row.started_at = row.started_at or utcnow()
+            session.commit()
+
         runner = LocalRunner(PROJECT_ROOT)
         result, run_dir = runner.run(
             task_dir, agent_dir, run_id=run_id, env=job.get("env")
@@ -74,14 +78,20 @@ def process_job(job: dict) -> None:
         )
     except Exception as e:
         traceback.print_exc()
-        with SessionLocal() as session:
-            row = session.query(Run).filter_by(run_id=run_id).one_or_none()
-            if row is not None:
-                row.status = "error"
-                row.error = f"{type(e).__name__}: {e}"
-                row.finished_at = utcnow()
-                session.commit()
-        publish_event({"type": "run.error", "run_id": run_id})
+        try:
+            with SessionLocal() as session:
+                row = session.query(Run).filter_by(run_id=run_id).one_or_none()
+                if row is not None:
+                    row.status = "error"
+                    row.error = f"{type(e).__name__}: {e}"
+                    row.finished_at = utcnow()
+                    session.commit()
+        except Exception:
+            traceback.print_exc()
+        try:
+            publish_event({"type": "run.error", "run_id": run_id})
+        except Exception:
+            pass
 
 
 def main(poll_timeout_s: int = 5) -> None:
@@ -99,7 +109,11 @@ def main(poll_timeout_s: int = 5) -> None:
             continue
         run_id = job.get("run_id", "?")
         print(f"[worker] picked up run {run_id}")
-        process_job(job)
+        try:
+            process_job(job)
+        except Exception:
+            traceback.print_exc()
+            print(f"[worker] job {run_id} failed unexpectedly; continuing")
         print(f"[worker] finished run {run_id}")
 
 
