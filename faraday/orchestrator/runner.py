@@ -146,8 +146,16 @@ def _wait_for_agent(agent, timeout_s: int) -> tuple[bool, str | None, int]:
         except APIError:
             pass
         return True, None, -1
-    except (APIError, DockerException) as e:
+    except Exception as e:
         return False, f"{type(e).__name__}: {e}", -1
+
+
+def _capture_agent_log(agent) -> bytes:
+    """Fetch the agent's log; a dead/removed container must not raise here."""
+    try:
+        return agent.logs(stdout=True, stderr=True, timestamps=True)
+    except (APIError, DockerException) as e:
+        return f"[faraday] could not fetch agent logs: {type(e).__name__}: {e}\n".encode()
 
 
 class LocalRunner:
@@ -211,9 +219,7 @@ class LocalRunner:
                 agent_ref, workspace, run_id, spec, manifest, net.id, env=env
             )
             timed_out, wait_error, rc = _wait_for_agent(agent, spec.limits.timeout_s)
-            (layout.logs_dir / "agent.log").write_bytes(
-                agent.logs(stdout=True, stderr=True, timestamps=True)
-            )
+            (layout.logs_dir / "agent.log").write_bytes(_capture_agent_log(agent))
 
             usage = _read_usage(workspace)
             outcome = _grade_safely(

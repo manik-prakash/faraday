@@ -42,3 +42,38 @@ def test_api_error_is_reported_as_an_error_not_a_timeout() -> None:
     assert timed_out is False
     assert wait_error is not None and "APIError" in wait_error
     assert agent.killed is False
+
+
+def test_other_exception_is_reported_as_an_error_not_raised() -> None:
+    agent = _FakeAgent(ConnectionError("daemon socket dropped"))
+    timed_out, wait_error, rc = _wait_for_agent(agent, 30)
+    assert timed_out is False
+    assert wait_error is not None and "ConnectionError" in wait_error
+    assert agent.killed is False
+
+
+class _FakeAgentLogs:
+    def __init__(self, logs_effect):
+        self._logs_effect = logs_effect
+
+    def logs(self, **kwargs):
+        if isinstance(self._logs_effect, Exception):
+            raise self._logs_effect
+        return self._logs_effect
+
+
+def test_capture_agent_log_returns_logs_normally() -> None:
+    from faraday.orchestrator.runner import _capture_agent_log
+
+    agent = _FakeAgentLogs(b"hello world")
+    assert _capture_agent_log(agent) == b"hello world"
+
+
+def test_capture_agent_log_survives_api_error() -> None:
+    from docker.errors import APIError
+
+    from faraday.orchestrator.runner import _capture_agent_log
+
+    agent = _FakeAgentLogs(APIError("container removed"))
+    out = _capture_agent_log(agent)
+    assert b"APIError" in out
