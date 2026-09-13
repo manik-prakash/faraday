@@ -196,13 +196,7 @@ class LocalRunner:
 
             usage = _read_usage(workspace)
             outcome = run_grader(
-                spec.grader,
-                GraderContext(
-                    workspace=workspace,
-                    task_dir=tdir,
-                    docker_client=self.client,
-                    task_container=task_env,
-                ),
+                spec.grader, self._grader_context(spec, workspace, tdir, task_env)
             )
             _copy_tree(workspace / "output", layout.output_dir)
         finally:
@@ -261,6 +255,17 @@ class LocalRunner:
             "mem_limit": f"{spec.limits.memory_mb}m",
             "nano_cpus": int(spec.limits.cpus * 1e9),
         }
+
+    def _grader_context(
+        self, spec: TaskSpec, workspace: Path, task_dir: Path, task_container
+    ) -> GraderContext:
+        return GraderContext(
+            workspace=workspace,
+            task_dir=task_dir,
+            docker_client=self.client,
+            task_container=task_container,
+            timeout_s=spec.limits.timeout_s,
+        )
 
     def _start_task_env(
         self, image_ref: str, workspace: Path, run_id: str, spec: TaskSpec
